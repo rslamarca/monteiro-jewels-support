@@ -1,0 +1,35 @@
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Database (local SQLite — never commit real data) ──────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Logs & temp ───────────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
