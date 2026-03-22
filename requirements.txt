@@ -1,0 +1,15 @@
+# HTTP & SSL
+requests>=2.31
+certifi>=2024.2
+
+# Supabase / PostgreSQL (production)
+psycopg2-binary>=2.9
+
+# Google Gmail API (OAuth)
+google-auth>=2.28
+google-auth-oauthlib>=1.2
+google-auth-httplib2>=0.2
+google-api-python-client>=2.120
+
+# Environment
+python-dotenv>=1.0
