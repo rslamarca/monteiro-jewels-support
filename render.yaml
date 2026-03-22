@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: monteiro-jewels-support
+    runtime: python
+    region: oregon
+    plan: free
+
+    # Root of the repo that Render will build from
+    rootDir: .
+
+    buildCommand: pip install -r requirements.txt
+
+    startCommand: python main.py
+
+    envVars:
+      - key: APP_HOST
+        value: "0.0.0.0"
+      - key: APP_PORT
+        value: "8000"
+
+      # ── Set these in the Render dashboard (never commit secrets) ──────────
+      - key: DATABASE_URL
+        sync: false   # fill in Render dashboard → Environment
+
+      - key: SHOPIFY_STORE
+        sync: false
+
+      - key: SHOPIFY_ACCESS_TOKEN
+        sync: false
+
+      - key: GMAIL_USER
+        sync: false
+
+      - key: GMAIL_APP_PASSWORD
+        sync: false
