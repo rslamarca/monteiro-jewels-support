@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monteiro Jewels — Support Agent</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#1e293b;height:100vh;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh}
+.header{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.main{display:flex;flex:1;overflow:hidden}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.logo-text h1{font-size:14px;font-weight:700;color:#1e293b}
+.logo-text p{font-size:11px;color:#94a3b8}
+.nav{display:flex;gap:4px}
+.nav-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border:none;background:none;border-radius:8px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;transition:all .15s}
+.nav-btn.active{background:#eff6ff;color:#4f46e5;font-weight:600}
+.nav-btn:hover:not(.active){background:#f1f5f9}
+.nav-badge{background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:18px;text-align:center}
+.header-right{display:flex;align-items:center;gap:12px}
+.status-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;font-size:12px;color:#15803d;font-weight:500}
+.status-dot{width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fetch-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.fetch-btn:hover{background:#4338ca}
+.fetch-btn:disabled{background:#a5b4fc;cursor:not-allowed}
+.sidebar{width:300px;border-right:1px solid #e2e8f0;background:#fff;display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-header{padding:12px 16px;border-bottom:1px solid #f1f5f9}
+.search-box{position:relative}
+.search-box input{width:100%;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;color:#1e293b;background:#f8fafc;outline:none;transition:border .15s}
+.search-box input:focus{border-color:#6366f1;background:#fff}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8}
+.email-list{flex:1;overflow-y:auto}
+.email-item{padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .1s;border-left:3px solid transparent}
+.email-item:hover{background:#f8fafc}
+.email-item.selected{background:#eff6ff;border-left-color:#6366f1}
+.email-item-top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.email-meta{flex:1;min-width:0}
+.email-name{font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.email-date{font-size:11px;color:#94a3b8;flex-shrink:0}
+.email-subject{font-size:12px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.badges{display:flex;gap:4px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:600}
+.b-pending,.b-draft,.b-new,.b-processing{background:#fef3c7;color:#92400e}
+.b-approved{background:#dbeafe;color:#1e40af}
+.b-sent{background:#dcfce7;color:#166534}
+.b-rejected{background:#fee2e2;color:#991b1b}
+.b-STATUS_PEDIDO{background:#dbeafe;color:#1e40af}
+.b-TROCA_DEVOLUCAO{background:#ffedd5;color:#9a3412}
+.b-DUVIDA_PRODUTO{background:#f3e8ff;color:#6b21a8}
+.b-CANCELAMENTO,.b-PROBLEMA_PEDIDO{background:#fee2e2;color:#991b1b}
+.b-OUTRO{background:#f1f5f9;color:#475569}
+.b-lang{background:#f0fdf4;color:#166534}
+.content{flex:1;display:flex;overflow:hidden}
+.center-panel{flex:1;overflow-y:auto;padding:20px}
+.right-panel{width:272px;border-left:1px solid #e2e8f0;background:#f8fafc;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.stat-val{font-size:22px;font-weight:800;color:#1e293b;line-height:1}
+.stat-lbl{font-size:11px;color:#94a3b8;margin-top:2px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px}
+.card-header{padding:12px 18px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:700;color:#1e293b}
+.email-from-row{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #f8fafc}
+.from-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;flex-shrink:0}
+.from-name{font-size:14px;font-weight:700}
+.from-email{font-size:12px;color:#94a3b8}
+.email-subject-bar{padding:10px 18px;border-bottom:1px solid #f8fafc;font-size:14px;font-weight:600}
+.email-body{padding:14px 18px;font-size:13px;color:#475569;line-height:1.7;white-space:pre-wrap}
+.draft-body{padding:14px 18px;font-size:13px;color:#374151;line-height:1.8;white-space:pre-wrap}
+.draft-actions{padding:12px 18px;border-top:1px solid #f1f5f9;display:flex;gap:8px}
+.btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-green{background:#22c55e;color:#fff;flex:1;justify-content:center}
+.btn-green:hover{background:#16a34a}
+.btn-indigo{background:#eef2ff;color:#4f46e5;flex:1;justify-content:center}
+.btn-indigo:hover{background:#e0e7ff}
+.btn-red{background:#fef2f2;color:#dc2626;padding:8px 12px}
+.btn-red:hover{background:#fee2e2}
+.btn-blue{background:#3b82f6;color:#fff;width:100%;justify-content:center}
+.btn-blue:hover{background:#2563eb}
+.btn-gray{background:#f1f5f9;color:#475569}
+.btn-gray:hover{background:#e2e8f0}
+.success-bar{padding:12px 18px;background:#f0fdf4;display:flex;align-items:center;gap:8px;color:#15803d;font-size:13px;font-weight:500}
+textarea.draft-edit{width:100%;height:220px;padding:12px 16px;border:1px solid #a5b4fc;border-radius:8px;font-size:13px;font-family:inherit;line-height:1.7;resize:none;outline:none;color:#374151}
+textarea.draft-edit:focus{border-color:#6366f1}
+.shopify-card{background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1px solid #bbf7d0;border-radius:12px;padding:14px}
+.shopify-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.shopify-icon{width:26px;height:26px;background:#16a34a;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+.shopify-title{font-size:13px;font-weight:700;color:#14532d}
+.shopify-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;font-size:12px;gap:8px}
+.shopify-label{color:#6b7280;flex-shrink:0;padding-top:1px}
+.shopify-value{font-weight:600;color:#1e293b;text-align:right;word-break:break-all}
+.shopify-divider{border:none;border-top:1px solid #bbf7d0;margin:10px 0}
+.shopify-section-title{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;margin:10px 0 6px}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;line-height:1.6}
+.status-fulfilled{background:#dcfce7;color:#15803d}
+.status-unfulfilled{background:#fef9c3;color:#92400e}
+.status-partial{background:#dbeafe;color:#1d4ed8}
+.status-paid{background:#dcfce7;color:#15803d}
+.status-pending{background:#fef9c3;color:#92400e}
+.status-refunded{background:#fee2e2;color:#b91c1c}
+.status-delivered{background:#dcfce7;color:#15803d}
+.status-confirmed{background:#dbeafe;color:#1d4ed8}
+.status-in_transit{background:#e0f2fe;color:#0369a1}
+.item-row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid #d1fae5;gap:8px;font-size:11px}
+.item-row:last-child{border-bottom:none}
+.item-name{color:#374151;flex:1;line-height:1.4}
+.item-variant{color:#9ca3af;font-size:10px;display:block}
+.item-price{color:#1e293b;font-weight:700;white-space:nowrap}
+.policy-box{background:rgba(255,255,255,.6);border-radius:8px;padding:8px 10px;margin-top:8px}
+.policy-title{font-size:11px;font-weight:700;color:#166534;margin-bottom:4px}
+.policy-body{font-size:11px;color:#374151;line-height:1.5}
+.sm-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px}
+.sm-card-title{font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px}
+.sm-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+.sm-label{color:#94a3b8}
+.sm-value{font-weight:600;color:#374151}
+.quick-btn{width:100%;text-align:left;padding:7px 10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;font-size:12px;color:#475569;cursor:pointer;margin-bottom:6px;transition:background .1s}
+.quick-btn:hover{background:#f1f5f9}
+.analytics,.settings{padding:24px;overflow-y:auto;flex:1}
+.analytics h2,.settings h2{font-size:20px;font-weight:800;color:#1e293b;margin-bottom:20px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.chart-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:14px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-label{font-size:11px;color:#64748b;width:130px;flex-shrink:0}
+.bar-track{flex:1;background:#f1f5f9;border-radius:4px;height:10px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;background:#6366f1}
+.bar-pct{font-size:11px;font-weight:700;width:30px;text-align:right}
+.settings-list{max-width:600px;display:flex;flex-direction:column;gap:10px}
+.settings-item{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.settings-name{font-size:14px;font-weight:600}
+.settings-sub{font-size:12px;color:#94a3b8;margin-top:2px}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;color:#fff;z-index:999;animation:slideup .25s ease;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.toast-success{background:#22c55e}
+.toast-error{background:#ef4444}
+.toast-info{background:#6366f1}
+@keyframes slideup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#94a3b8;gap:12px}
+.empty-icon{font-size:42px;opacity:.4}
+.empty-text{font-size:13px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin .7s linear infinite}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+/* ── Sync progress bar ── */
+.sync-bar{background:#fff;border-bottom:2px solid #e2e8f0;overflow:hidden;max-height:0;transition:max-height .3s ease,border-color .3s}
+.sync-bar.active{max-height:52px}
+.sync-bar.done-bar{border-color:#bbf7d0}
+.sync-bar-inner{padding:10px 24px;display:flex;align-items:center;gap:14px}
+.sync-track{flex:1;height:6px;background:#e2e8f0;border-radius:6px;overflow:hidden}
+.sync-fill{height:100%;width:0%;border-radius:6px;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width .5s cubic-bezier(.4,0,.2,1),background .4s}
+.sync-fill.fill-done{background:linear-gradient(90deg,#22c55e,#16a34a)}
+.sync-fill.fill-error{background:#ef4444}
+.sync-label{font-size:12px;font-weight:600;color:#475569;white-space:nowrap;min-width:260px;transition:color .3s}
+.sync-label.label-done{color:#15803d}
+.sync-label.label-error{color:#dc2626}
+.sync-pct{font-size:12px;font-weight:800;color:#6366f1;min-width:38px;text-align:right;transition:color .3s}
+.sync-pct.pct-done{color:#22c55e}
+.sync-pct.pct-error{color:#ef4444}
+.fetch-btn.syncing{background:#6366f1;cursor:not-allowed}
+/* ── Gmail warning banner ── */
+.gmail-warn{display:none;padding:8px 24px;background:#fef3c7;border-bottom:1px solid #fde68a;font-size:12px;color:#92400e;font-weight:500}
+/* ── Mailbox tabs ── */
+.mailbox-tabs{display:flex;gap:4px;padding:10px 12px 0;border-bottom:1px solid #f1f5f9}
+.mailbox-tab{flex:1;padding:7px 4px;border:none;background:none;border-radius:8px 8px 0 0;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.mailbox-tab.active{color:#4f46e5;border-bottom-color:#4f46e5;background:#f8faff}
+.mailbox-tab:hover:not(.active){background:#f1f5f9}
+.outbox-badge{background:#22c55e;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center;display:inline-block;margin-left:3px}
+/* ── Compose button ── */
+.compose-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.compose-btn:hover{background:#16a34a}
+/* ── Compose modal ── */
+.compose-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px}
+.compose-modal{background:#fff;border-radius:16px;padding:0;max-width:640px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;max-height:90vh}
+.compose-header{padding:18px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.compose-header h3{font-size:16px;font-weight:700;color:#1e293b}
+.compose-close{border:none;background:none;font-size:22px;cursor:pointer;color:#94a3b8;line-height:1;padding:0}
+.compose-body{padding:20px 24px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1}
+.compose-field label{display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.compose-field input,.compose-field textarea,.compose-field select{width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#1e293b;outline:none;transition:border .15s;background:#fff}
+.compose-field input:focus,.compose-field textarea:focus{border-color:#6366f1}
+.compose-field textarea{height:180px;resize:vertical;line-height:1.7}
+.compose-footer{padding:14px 24px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;flex-shrink:0}
+.b-outbound{background:#f0fdf4;color:#166534}
+.b-draft_ready{background:#fef3c7;color:#92400e}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">💎</div>
+      <div class="logo-text"><h1>Monteiro Jewels</h1><p>Support Agent Dashboard</p></div>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" onclick="switchView('inbox')" id="nav-inbox">📨 Inbox</button>
+      <button class="nav-btn" onclick="switchView('analytics')" id="nav-analytics">📊 Analytics</button>
+      <button class="nav-btn" onclick="switchView('settings')" id="nav-settings">⚙️ Config</button>
+    </nav>
+    <div class="header-right">
+      <div class="status-pill"><span class="status-dot"></span>Agente Ativo</div>
+      <button class="compose-btn" onclick="openCompose()">✏️ Novo Email</button>
+      <button class="fetch-btn" id="fetch-btn" onclick="fetchEmails()">🔄 Sincronizar Emails</button>
+    </div>
+  </header>
+
+  <!-- GMAIL WARNING BANNER -->
+  <div class="gmail-warn" id="gmail-warn"></div>
+
+  <!-- SYNC PROGRESS BAR -->
+  <div class="sync-bar" id="sync-bar">
+    <div class="sync-bar-inner">
+      <div class="sync-label" id="sync-label">📡 Iniciando...</div>
+      <div class="sync-track"><div class="sync-fill" id="sync-fill"></div></div>
+      <div class="sync-pct" id="sync-pct">0%</div>
+    </div>
+  </div>
+
+  <!-- INBOX -->
+  <div class="main" id="view-inbox">
+    <div class="sidebar">
+      <div class="mailbox-tabs">
+        <button class="mailbox-tab active" id="tab-inbox" onclick="setMailbox('inbox')">📥 Entrada <span class="nav-badge" id="badge-count" style="font-size:10px">0</span></button>
+        <button class="mailbox-tab" id="tab-outbox" onclick="setMailbox('outbox')">📤 Saída <span class="outbox-badge" id="badge-outbox" style="display:none">0</span></button>
+      </div>
+      <div class="sidebar-header">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Buscar emails..." oninput="renderList()">
+        </div>
+      </div>
+      <div class="email-list" id="email-list">
+        <div class="empty" style="height:200px"><div class="empty-icon">📭</div><div class="empty-text">Carregando...</div></div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="center-panel">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">⏳</div><div><div class="stat-val" id="s-pending">—</div><div class="stat-lbl">Pendentes</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#dcfce7">✅</div><div><div class="stat-val" id="s-sent">—</div><div class="stat-lbl">Enviados</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">📨</div><div><div class="stat-val" id="s-total">—</div><div class="stat-lbl">Total</div></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#f3e8ff">🗄️</div><div><div class="stat-val" id="s-rejected">—</div><div class="stat-lbl">Descartados</div></div></div>
+        </div>
+        <div id="detail-area">
+          <div class="empty" style="height:300px"><div class="empty-icon">👈</div><div class="empty-text">Selecione um email para ver os detalhes</div></div>
+        </div>
+      </div>
+      <div class="right-panel" id="right-panel">
+        <div class="empty" style="height:200px"><div class="empty-icon">🛍️</div><div class="empty-text" style="font-size:12px">Selecione um email</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="main" id="view-analytics" style="display:none">
+    <div class="analytics">
+      <h2>📊 Analytics</h2>
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">📨</div><div><div class="stat-val" id="a-total">—</div><div class="stat-lbl">Total de Tickets</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#dcfce7">📤</div><div><div class="stat-val" id="a-sent">—</div><div class="stat-lbl">Respostas Enviadas</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">⏳</div><div><div class="stat-val" id="a-pending">—</div><div class="stat-lbl">Pendentes</div></div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><div class="chart-title">Por Categoria</div><div id="cat-chart"><div style="color:#94a3b8;font-size:12px">Carregando...</div></div></div>
+        <div class="chart-card"><div class="chart-title">Por Status</div><div id="status-chart"><div style="color:#94a3b8;font-size:12px">Carregando...</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="main" id="view-settings" style="display:none">
+    <div class="settings">
+      <h2>⚙️ Configurações</h2>
+      <div class="settings-list">
+        <div class="settings-item"><div><div class="settings-name">🛍️ Shopify</div><div class="settings-sub">rachap-8j.myshopify.com</div></div><span class="badge b-sent">● Configurado</span></div>
+        <div class="settings-item"><div><div class="settings-name">📧 Gmail</div><div class="settings-sub">monteirojewels@gmail.com</div></div><span class="badge b-sent">● Conectado</span></div>
+        <div class="settings-item"><div><div class="settings-name">🗄️ Banco de Dados</div><div class="settings-sub">SQLite — criado automaticamente</div></div><span class="badge b-sent">● Ativo</span></div>
+        <div class="settings-item"><div><div class="settings-name">⏰ Agendamento</div><div class="settings-sub">A cada hora via Cowork Scheduler</div></div><span class="badge b-sent">● Ativo</span></div>
+        <div class="settings-item" style="flex-direction:column;align-items:flex-start;gap:10px">
+          <div><div class="settings-name">📡 Endpoints da API</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <code style="background:#f1f5f9;padding:3px 8px;border-radius:5px;font-size:11px">GET /api/tickets</code>
+            <code style="background:#f1f5f9;padding:3px 8px;border-radius:5px;font-size:11px">POST /api/fetch-emails</code>
+            <code style="background:#f1f5f9;padding:3px 8px;border-radius:5px;font-size:11px">GET /api/stats</code>
+            <code style="background:#f1f5f9;padding:3px 8px;border-radius:5px;font-size:11px">PUT /api/tickets/:id</code>
+            <code style="background:#f1f5f9;padding:3px 8px;border-radius:5px;font-size:11px">POST /api/tickets/:id/send</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Agent AI Policy & Prompting ─────────────────────────────── -->
+      <h2 style="margin-top:32px">🤖 Agente IA — Regras & Políticas</h2>
+      <p style="font-size:13px;color:#64748b;margin:0 0 16px">
+        Estas regras controlam como o agente gera as respostas automaticamente.
+        Para modificá-las, edite a seção <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">AGENT_CONFIG</code>
+        em <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px">main.py</code>.
+      </p>
+      <div id="agent-policy-panel" class="settings-list">
+        <div style="color:#94a3b8;font-size:13px;padding:12px 0">Carregando configuração do agente...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+var allTickets = [];
+var selectedId = null;
+var currentMailbox = 'inbox'; // 'inbox' | 'outbox'
+
+function isOutbound(t) {
+  var id = t.gmail_message_id || '';
+  return id.indexOf('outbound-') === 0   // new compose email
+      || id.indexOf('sent-') === 0        // sent reply copy
+      || (t.body && t.body.indexOf('[Outbound]') === 0);
+}
+
+function setMailbox(mb) {
+  currentMailbox = mb;
+  selectedId = null;
+  document.getElementById('tab-inbox').classList.toggle('active', mb==='inbox');
+  document.getElementById('tab-outbox').classList.toggle('active', mb==='outbox');
+  document.getElementById('detail-area').innerHTML = '<div class="empty" style="height:300px"><div class="empty-icon">👈</div><div class="empty-text">Selecione um email para ver os detalhes</div></div>';
+  document.getElementById('right-panel').innerHTML = '<div class="empty" style="height:200px"><div class="empty-icon">🛍️</div><div class="empty-text" style="font-size:12px">Selecione um email</div></div>';
+  renderList();
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+window.onload = function() {
+  loadAll();
+  checkStatus();
+  loadAgentConfig();
+  setInterval(loadAll, 60000);
+};
+
+// ── Agent Config Panel ─────────────────────────────────────────────────────
+function loadAgentConfig() {
+  req('GET', '/api/agent-config', null, function(err, cfg) {
+    var panel = document.getElementById('agent-policy-panel');
+    if (!panel) return;
+    if (err || !cfg) {
+      panel.innerHTML = '<div style="color:#ef4444;font-size:13px">Erro ao carregar configuração.</div>';
+      return;
+    }
+    var rp = cfg.return_policy || {};
+    var sp = cfg.shipping_policy || {};
+    function row(icon, label, val) {
+      return '<div class="settings-item"><div><div class="settings-name">'+icon+' '+esc(label)+'</div></div>'
+        +'<span style="font-size:13px;color:#334155;font-weight:500">'+esc(String(val))+'</span></div>';
+    }
+    function linkRow(icon, label, url) {
+      if (!url) return '';
+      return '<div class="settings-item"><div><div class="settings-name">'+icon+' '+esc(label)+'</div>'
+        +'<div class="settings-sub"><a href="'+esc(url)+'" target="_blank" style="color:#3b82f6">'+esc(url)+'</a></div></div></div>';
+    }
+    var html = '';
+    // Tone
+    html += '<div class="settings-item" style="flex-direction:column;align-items:flex-start;gap:4px">'
+      +'<div class="settings-name">🎯 Tom & Comportamento</div>'
+      +'<div class="settings-sub" style="line-height:1.5">'+esc(cfg.tone||'')+'</div></div>';
+    // Return policy
+    html += '<div class="settings-item" style="flex-direction:column;align-items:flex-start;gap:6px">'
+      +'<div class="settings-name">🔄 Política de Devoluções</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%">'
+      +'<div style="background:#f1f5f9;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#64748b">Prazo</div><div style="font-weight:600;font-size:14px;color:#1e293b">'+(rp.window_days||14)+' dias</div></div>'
+      +'<div style="background:#f1f5f9;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#64748b">Reembolso após retorno</div><div style="font-weight:600;font-size:14px;color:#1e293b">'+(rp.refund_processing_days||5)+' dias úteis</div></div>'
+      +'<div style="background:#f1f5f9;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#64748b">Exige fotos</div><div style="font-weight:600;font-size:14px;color:#1e293b">'+(rp.requires_photos?'✅ Sim':'❌ Não')+'</div></div>'
+      +'<div style="background:#f1f5f9;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#64748b">Etiqueta de retorno</div><div style="font-weight:600;font-size:14px;color:#1e293b">'+(rp.return_label?'✅ Fornecida':'❌ Não')+'</div></div>'
+      +'</div>'
+      +(rp.condition?'<div class="settings-sub">📋 Condição: '+esc(rp.condition)+'</div>':'')
+      +'</div>';
+    // Policy links
+    html += '<div class="settings-item" style="flex-direction:column;align-items:flex-start;gap:6px">'
+      +'<div class="settings-name">🔗 Links de Política</div>';
+    var links = [
+      ['📦 Política de Devoluções', rp.url],
+      ['🚚 Política de Envio',     sp.url],
+      ['🔒 Privacidade',           cfg.privacy_policy_url],
+      ['📄 Termos de Serviço',     cfg.terms_url],
+    ];
+    links.forEach(function(l){ if(l[1]) html+='<div style="margin-top:2px"><a href="'+esc(l[1])+'" target="_blank" style="color:#3b82f6;font-size:13px">'+esc(l[0])+'</a></div>'; });
+    html += '</div>';
+    // Shipping
+    if (sp.standard_days || sp.express_days) {
+      html += '<div class="settings-item" style="flex-direction:column;align-items:flex-start;gap:4px">'
+        +'<div class="settings-name">🚚 Prazos de Envio</div>'
+        +(sp.standard_days?'<div class="settings-sub">Padrão: '+esc(sp.standard_days)+'</div>':'')
+        +(sp.express_days?'<div class="settings-sub">Expresso: '+esc(sp.express_days)+'</div>':'')
+        +'</div>';
+    }
+    // Contact
+    html += row('📧', 'Email de Suporte', cfg.support_email||'—');
+    html += row('🌐', 'Loja', cfg.store_url||'—');
+    panel.innerHTML = html;
+  });
+}
+
+function checkStatus() {
+  req('GET', '/api/status', null, function(err, s) {
+    if (err || !s) return;
+    var warn = document.getElementById('gmail-warn');
+    if (!warn) return;
+    // Only show banner if credentials file exists but OAuth not yet completed (token missing)
+    var needsOAuth = s.gmail.available && !s.gmail.ok && s.gmail.msg && s.gmail.msg.indexOf('credentials.json found') !== -1;
+    if (needsOAuth) {
+      warn.textContent = '⚠️ Gmail encontrado mas não autenticado. Clique em Sincronizar para completar o OAuth.';
+      warn.style.display = 'block';
+    } else {
+      warn.style.display = 'none';
+    }
+  });
+}
+
+function loadAll() {
+  loadTickets();
+  loadStats();
+}
+
+// ── View ───────────────────────────────────────────────────────────────────
+function switchView(v) {
+  ['inbox','analytics','settings'].forEach(function(x) {
+    document.getElementById('view-'+x).style.display = x===v ? 'flex' : 'none';
+    var btn = document.getElementById('nav-'+x);
+    btn.classList.toggle('active', x===v);
+  });
+  if (v==='analytics') loadStats();
+}
+
+// ── API ────────────────────────────────────────────────────────────────────
+function req(method, path, body, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open(method, path);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.onload = function() {
+    try { cb(null, JSON.parse(xhr.responseText)); }
+    catch(e) { cb(e); }
+  };
+  xhr.onerror = function() { cb(new Error('Network error')); };
+  xhr.send(body ? JSON.stringify(body) : null);
+}
+
+// ── Tickets ────────────────────────────────────────────────────────────────
+function loadTickets() {
+  req('GET', '/api/tickets', null, function(err, data) {
+    if (err || !Array.isArray(data)) return;
+    allTickets = data;
+    renderList();
+    updateBadge();
+    if (selectedId) {
+      var t = allTickets.find(function(x){return x.id===selectedId;});
+      if (t) { renderDetail(t); renderRight(t); }
+    }
+  });
+}
+
+function loadStats() {
+  req('GET', '/api/stats', null, function(err, s) {
+    if (err || !s) return;
+    set('s-pending', s.pending);
+    set('s-sent', s.sent);
+    set('s-total', s.total);
+    set('s-rejected', s.rejected||0);
+    set('a-total', s.total);
+    set('a-sent', s.sent);
+    set('a-pending', s.pending);
+    renderCharts(s);
+  });
+}
+
+function set(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function updateBadge() {
+  var inbound = allTickets.filter(function(t){ return !isOutbound(t); });
+  var outbound = allTickets.filter(function(t){ return isOutbound(t); });
+  var pending = inbound.filter(function(t){ return ['new','processing','draft_ready'].includes(t.status); }).length;
+  var sentOut = outbound.length;
+  set('badge-count', pending || '');
+  var ob = document.getElementById('badge-outbox');
+  if (ob) { ob.textContent = sentOut; ob.style.display = sentOut ? 'inline-block' : 'none'; }
+}
+
+// ── List rendering ─────────────────────────────────────────────────────────
+function renderList() {
+  var q = (document.getElementById('search-input')||{value:''}).value.toLowerCase();
+  var pool = allTickets.filter(function(t) {
+    return currentMailbox === 'outbox' ? isOutbound(t) : !isOutbound(t);
+  });
+  var filtered = pool.filter(function(t) {
+    return !q || (t.customer_name||'').toLowerCase().includes(q)
+               || (t.customer_email||'').toLowerCase().includes(q)
+               || (t.subject||'').toLowerCase().includes(q);
+  });
+  var el = document.getElementById('email-list');
+  var emptyMsg = currentMailbox === 'outbox' ? 'Nenhum email enviado ainda' : 'Nenhum email';
+  if (!filtered.length) {
+    el.innerHTML = '<div class="empty" style="height:200px"><div class="empty-icon">'+(currentMailbox==='outbox'?'📤':'📭')+'</div><div class="empty-text">'+emptyMsg+'</div></div>';
+    return;
+  }
+  el.innerHTML = filtered.map(itemHTML).join('');
+}
+
+var CAT = {STATUS_PEDIDO:'📦 Pedido',TROCA_DEVOLUCAO:'🔄 Troca/Dev',DUVIDA_PRODUTO:'🛍️ Produto',CANCELAMENTO:'❌ Cancelar',PROBLEMA_PEDIDO:'⚠️ Problema',OUTRO:'💬 Outro'};
+var SLBL = {new:'⏳ Novo',processing:'⚙️ Proc.',draft_ready:'✍️ Rascunho',approved:'✅ Aprovado',sent:'📤 Enviado',rejected:'🗑️ Descartado'};
+var SCLS = {new:'b-new',processing:'b-processing',draft_ready:'b-draft',approved:'b-approved',sent:'b-sent',rejected:'b-rejected'};
+var COLORS = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6'];
+
+function avatarColor(name) {
+  var h=0; var s=name||'?';
+  for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))%COLORS.length;
+  return COLORS[h];
+}
+
+function initials(name) {
+  return (name||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+}
+
+function itemHTML(t) {
+  var sel = t.id===selectedId ? 'selected' : '';
+  var color = avatarColor(t.customer_name);
+  var date = (t.received_at||'').substring(0,10);
+  return '<div class="email-item '+sel+'" onclick="selectTicket('+t.id+')">'
+    +'<div class="email-item-top">'
+    +'<div class="avatar" style="background:'+color+'">'+initials(t.customer_name)+'</div>'
+    +'<div class="email-meta"><div class="email-name">'+esc(t.customer_name||t.customer_email)+'</div></div>'
+    +'<div class="email-date">'+date+'</div></div>'
+    +'<div class="email-subject">'+esc(t.subject||'(sem assunto)')+'</div>'
+    +'<div class="badges">'
+    +'<span class="badge '+(SCLS[t.status]||'b-new')+'">'+(SLBL[t.status]||t.status)+'</span>'
+    +'<span class="badge b-'+(t.category||'OUTRO')+'">'+(CAT[t.category]||t.category||'—')+'</span>'
+    +(t.language?'<span class="badge b-lang">'+t.language+'</span>':'')
+    +'</div></div>';
+}
+
+// ── Select & detail ────────────────────────────────────────────────────────
+function selectTicket(id) {
+  selectedId = id;
+  renderList();
+  var t = allTickets.find(function(x){return x.id===id;});
+  if (t) { renderDetail(t); renderRight(t); }
+}
+
+function renderDetail(t) {
+  var color = avatarColor(t.customer_name);
+  var ini = initials(t.customer_name);
+  var date = (t.received_at||'').substring(0,16).replace('T',' ');
+
+  // Actions HTML based on status
+  var actions = '';
+  if (t.status==='draft_ready') {
+    actions = '<div class="draft-actions">'
+      +'<button class="btn btn-green" onclick="doApprove('+t.id+')">✅ Aprovar</button>'
+      +'<button class="btn btn-indigo" onclick="doEdit('+t.id+')">✏️ Editar</button>'
+      +'<button class="btn btn-red" onclick="doReject('+t.id+')" title="Descartar">🗑️</button>'
+      +'</div>';
+  } else if (t.status==='approved') {
+    actions = '<div class="draft-actions"><button class="btn btn-blue" onclick="doSend('+t.id+')">📤 Enviar Resposta ao Cliente</button></div>';
+  } else if (t.status==='sent') {
+    actions = '<div class="success-bar">📤 Resposta enviada com sucesso</div>';
+  } else if (t.status==='processing'||t.status==='new') {
+    actions = '<div class="draft-actions"><span style="font-size:12px;color:#94a3b8">⚙️ Aguardando processamento...</span></div>';
+  }
+
+  var draftBlock = t.draft_response
+    ? '<div class="card" style="margin-bottom:0">'
+      +'<div class="card-header"><div class="card-title">🤖 Resposta do Agente IA</div>'
+      +'<span class="chip '+(SCLS[t.status]||'b-new')+'">'+(SLBL[t.status]||t.status)+'</span></div>'
+      +'<div class="draft-body" id="draft-body">'+esc(t.draft_response)+'</div>'
+      +actions+'</div>'
+    : '<div class="card"><div style="padding:16px;font-size:13px;color:#94a3b8">⚙️ Rascunho ainda não gerado.</div></div>';
+
+  document.getElementById('detail-area').innerHTML =
+    '<div class="card" style="margin-bottom:16px">'
+    +'<div class="email-from-row">'
+    +'<div class="from-avatar" style="background:'+color+'">'+ini+'</div>'
+    +'<div><div class="from-name">'+esc(t.customer_name||'—')+'</div>'
+    +'<div class="from-email">'+esc(t.customer_email||'')+'</div></div>'
+    +'<div style="margin-left:auto;font-size:11px;color:#94a3b8">'+date+'</div></div>'
+    +'<div class="email-subject-bar">'+esc(t.subject||'(sem assunto)')+'</div>'
+    +'<div class="email-body">'+esc(t.body||'')+'</div>'
+    +'</div>'+draftBlock;
+}
+
+// ── Edit draft ─────────────────────────────────────────────────────────────
+function doEdit(id) {
+  var t = allTickets.find(function(x){return x.id===id;});
+  if (!t) return;
+  var body = document.getElementById('draft-body');
+  if (!body) return;
+  var parent = body.parentElement;
+  // Replace body and remove actions
+  body.outerHTML = '<div style="padding:12px 18px">'
+    +'<textarea class="draft-edit" id="edit-ta">'+esc(t.draft_response||'')+'</textarea>'
+    +'<div style="display:flex;gap:8px;margin-top:8px">'
+    +'<button class="btn btn-green" onclick="doSaveEdit('+id+')">💾 Salvar</button>'
+    +'<button class="btn btn-gray" onclick="doCancelEdit('+id+')">Cancelar</button>'
+    +'</div></div>';
+  var actions = parent.querySelector('.draft-actions');
+  if (actions) actions.remove();
+}
+
+function doCancelEdit(id) {
+  var t = allTickets.find(function(x){return x.id===id;});
+  if (t) renderDetail(t);
+}
+
+function doSaveEdit(id) {
+  var ta = document.getElementById('edit-ta');
+  if (!ta) return;
+  var text = ta.value;
+  req('PUT','/api/tickets/'+id,{draft_response:text},function(err,t){
+    if(err){toast('Erro ao salvar','error');return;}
+    updateLocal(t);
+    toast('✏️ Rascunho salvo','success');
+  });
+}
+
+// ── Actions ────────────────────────────────────────────────────────────────
+function doApprove(id) {
+  req('PUT','/api/tickets/'+id,{status:'approved'},function(err,t){
+    if(err){toast('Erro ao aprovar','error');return;}
+    updateLocal(t);
+    toast('✅ Aprovado!','success');
+  });
+}
+
+function doReject(id) {
+  if (!confirm('Descartar este ticket?')) return;
+  req('PUT','/api/tickets/'+id,{status:'rejected'},function(err,t){
+    if(err){toast('Erro','error');return;}
+    updateLocal(t);
+    toast('🗑️ Descartado','success');
+  });
+}
+
+function doSend(id) {
+  // Disable button and show sending state
+  var btn = document.querySelector('[onclick="doSend('+id+')"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+
+  req('POST','/api/tickets/'+id+'/send',{},function(err,res){
+    if (btn) { btn.disabled = false; btn.innerHTML = '📤 Enviar Resposta ao Cliente'; }
+
+    if (err) { toast('❌ Erro de conexão — tente novamente', 'error'); return; }
+
+    if (res && res.error) {
+      toast('❌ ' + res.error, 'error');
+      return;
+    }
+
+    if (res && res.manual) {
+      // SMTP not configured yet — show copy dialog as fallback
+      updateLocal(res.ticket || res);
+      showManualSendDialog(res.to, res.draft, res.subject || (res.ticket && res.ticket.subject), id);
+      return;
+    }
+
+    // Success — email actually sent via SMTP
+    updateLocal(res.ticket || res);
+    toast('✅ Email enviado com sucesso!', 'success');
+    loadAll();
+    setMailbox('outbox');
+  });
+}
+
+function markAsSent(ticketId, overlayEl) {
+  if (!ticketId) { if(overlayEl) overlayEl.remove(); setMailbox('outbox'); return; }
+  req('PUT', '/api/tickets/'+ticketId, {status:'sent'}, function(err, t) {
+    if (!err && t) updateLocal(t);
+    loadAll();
+    if (overlayEl) overlayEl.remove();
+    toast('📤 Marcado como enviado!', 'success');
+    setMailbox('outbox');
+  });
+}
+
+function showManualSendDialog(to, draft, subject, ticketId) {
+  var subjectLine = subject ? '<div style="margin-bottom:8px;font-size:12px;color:#64748b">Assunto: <strong style="color:#1e293b">'+h(subject)+'</strong></div>' : '';
+  var mailtoHref = 'mailto:'+encodeURIComponent(to)+(subject?'?subject='+encodeURIComponent(subject):'');
+  var overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+    +'<h3 style="font-size:16px;font-weight:700;color:#1e293b">📋 Enviar pelo seu email</h3>'
+    +'<button onclick="this.closest(\'[data-modal]\').remove()" style="border:none;background:none;font-size:22px;cursor:pointer;color:#94a3b8;line-height:1">×</button></div>'
+    +'<p style="font-size:13px;color:#64748b;margin-bottom:10px">Para: <strong style="color:#1e293b">'+h(to)+'</strong></p>'
+    +subjectLine
+    +'<textarea id="manual-draft-txt" readonly style="width:100%;height:200px;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;color:#1e293b;background:#f8fafc">'+h(draft)+'</textarea>'
+    +'<p style="font-size:12px;color:#94a3b8;margin-top:10px;margin-bottom:14px">1. Copie a mensagem ou abra no seu app de email &nbsp;·&nbsp; 2. Após enviar, clique em <strong style="color:#22c55e">Confirmar Envio</strong></p>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<button onclick="navigator.clipboard.writeText(document.getElementById(\'manual-draft-txt\').value);this.textContent=\'✅ Copiado!\';this.style.background=\'#16a34a\'" style="flex:1;min-width:130px;padding:10px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📋 Copiar mensagem</button>'
+    +'<a href="'+mailtoHref+'" target="_blank" style="flex:1;min-width:130px;padding:10px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center">📧 Abrir no Email</a>'
+    +'<button id="confirm-sent-btn" style="flex:1;min-width:130px;padding:10px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">✅ Confirmar Envio</button>'
+    +'<button onclick="this.closest(\'[data-modal]\').remove()" style="padding:10px 14px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Fechar</button>'
+    +'</div></div>';
+  overlay.setAttribute('data-modal','1');
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+  // Wire confirm button after appending
+  document.getElementById('confirm-sent-btn').addEventListener('click', function() {
+    markAsSent(ticketId, overlay);
+  });
+}
+
+// ── Compose ─────────────────────────────────────────────────────────────────
+function openCompose(prefillTo, prefillName, prefillSubject, prefillBody) {
+  // Remove any existing compose modal
+  var existing = document.getElementById('compose-modal-overlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'compose-overlay';
+  overlay.id = 'compose-modal-overlay';
+  overlay.innerHTML =
+    '<div class="compose-modal">'
+    +'<div class="compose-header">'
+    +'<h3>✏️ Novo Email</h3>'
+    +'<button class="compose-close" onclick="document.getElementById(\'compose-modal-overlay\').remove()">×</button>'
+    +'</div>'
+    +'<div class="compose-body">'
+    +'<div class="compose-field"><label>Para (email do cliente)</label><input id="c-to" type="email" placeholder="cliente@exemplo.com" value="'+(prefillTo||'')+'"></div>'
+    +'<div class="compose-field"><label>Nome do cliente</label><input id="c-name" type="text" placeholder="Nome completo" value="'+(prefillName||'')+'"></div>'
+    +'<div class="compose-field"><label>Assunto</label><input id="c-subject" type="text" placeholder="Ex: Sobre seu pedido #1234" value="'+(prefillSubject||'')+'"></div>'
+    +'<div class="compose-field"><label>Mensagem</label><textarea id="c-body" placeholder="Escreva sua mensagem aqui...">'+(prefillBody||'Hi,\n\nThank you for choosing Monteiro Jewels.\n\n\n\nBest regards,\nMonteiro Jewels')+'</textarea></div>'
+    +'</div>'
+    +'<div class="compose-footer">'
+    +'<button onclick="document.getElementById(\'compose-modal-overlay\').remove()" style="padding:9px 18px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Cancelar</button>'
+    +'<button onclick="submitCompose()" style="padding:9px 18px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📤 Preparar Envio</button>'
+    +'</div>'
+    +'</div>';
+  overlay.addEventListener('click', function(e){if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+  setTimeout(function(){var el=document.getElementById('c-to');if(el&&!prefillTo)el.focus();},50);
+}
+
+function submitCompose() {
+  var to      = (document.getElementById('c-to')||{}).value||'';
+  var name    = (document.getElementById('c-name')||{}).value||'';
+  var subject = (document.getElementById('c-subject')||{}).value||'';
+  var body    = (document.getElementById('c-body')||{}).value||'';
+
+  if (!to)      { alert('Por favor insira o email do cliente.'); return; }
+  if (!subject) { alert('Por favor insira o assunto.'); return; }
+  if (!body)    { alert('Por favor escreva a mensagem.'); return; }
+
+  // Close compose modal
+  var composeOverlay = document.getElementById('compose-modal-overlay');
+  if (composeOverlay) composeOverlay.remove();
+
+  // Save to DB first to get a ticket ID, then show send dialog
+  req('POST', '/api/compose', {to:to, name:name, subject:subject, body:body}, function(err, res) {
+    var ticketId = res && res.ticket && res.ticket.id;
+    loadAll();
+    showManualSendDialog(to, body, subject, ticketId || null);
+    toast('✉️ Email preparado!', 'success');
+  });
+}
+
+// ── Sync with progress bar ──────────────────────────────────────────────────
+var _syncTimer = null;
+
+var SYNC_STEPS = [
+  {p: 8,  msg: '📡 Conectando ao Gmail...'},
+  {p: 22, msg: '📨 Lendo emails não lidos...'},
+  {p: 40, msg: '🔍 Classificando emails por categoria...'},
+  {p: 58, msg: '🛍️ Consultando dados do Shopify...'},
+  {p: 74, msg: '🤖 Gerando rascunhos de resposta com IA...'},
+  {p: 88, msg: '💾 Salvando tickets no banco de dados...'},
+  {p: 94, msg: '⏳ Aguardando confirmação do servidor...'}
+];
+
+function fetchEmails() {
+  if (_syncTimer) return; // already running
+  var btn   = document.getElementById('fetch-btn');
+  var bar   = document.getElementById('sync-bar');
+  var fill  = document.getElementById('sync-fill');
+  var lbl   = document.getElementById('sync-label');
+  var pct   = document.getElementById('sync-pct');
+
+  // Reset state
+  fill.className = 'sync-fill';
+  fill.style.width = '0%';
+  lbl.className = 'sync-label';
+  pct.className = 'sync-pct';
+  bar.classList.remove('done-bar');
+
+  // Show bar
+  bar.classList.add('active');
+  btn.disabled = true;
+  btn.classList.add('syncing');
+  btn.innerHTML = '<span class="spin">⏳</span> Sincronizando...';
+
+  // Advance steps visually while waiting for server
+  var step = 0;
+  function advance() {
+    if (step < SYNC_STEPS.length) {
+      fill.style.width = SYNC_STEPS[step].p + '%';
+      pct.textContent  = SYNC_STEPS[step].p + '%';
+      lbl.textContent  = SYNC_STEPS[step].msg;
+      step++;
+    }
+  }
+  advance();
+  _syncTimer = setInterval(advance, 900);
+
+  // Call API
+  req('POST', '/api/fetch-emails', {}, function(err, res) {
+    clearInterval(_syncTimer);
+    _syncTimer = null;
+    btn.disabled = false;
+    btn.classList.remove('syncing');
+    btn.innerHTML = '🔄 Sincronizar Emails';
+
+    // Treat any Gmail credential/auth error as a soft warning — inbox still works
+    var isGmailError = !err && res && res.error && /gmail|credentials|oauth|token/i.test(res.error);
+
+    if (err) {
+      fill.className = 'sync-fill fill-error';
+      fill.style.width = '100%';
+      lbl.className = 'sync-label label-error';
+      lbl.textContent = '⍌ Falha na conexão com o servidor';
+      pct.className = 'sync-pct pct-error';
+      pct.textContent = '!';
+      toast('❌ Falha na conexão', 'error');
+      loadAll();
+      setTimeout(function() { bar.classList.remove('active'); }, 5000);
+      return;
+    }
+
+    if ((res && res.warning) || isGmailError) {
+      // Gmail not configured — inbox still refreshes from DB normally
+      fill.className = 'sync-fill fill-done';
+      fill.style.width = '100%';
+      lbl.className = 'sync-label label-done';
+      lbl.textContent = '📥 Inbox atualizado';
+      pct.className = 'sync-pct pct-done';
+      pct.textContent = '✓';
+      bar.classList.add('done-bar');
+      toast('📥 Inbox atualizado', 'info');
+      loadAll();
+      setTimeout(function() { bar.classList.remove('active', 'done-bar'); }, 4000);
+      return;
+    }
+
+    var count = res.processed || 0;
+    fill.className = 'sync-fill fill-done';
+    fill.style.width = '100%';
+    lbl.className = 'sync-label label-done';
+    lbl.textContent = '✅ Sincronização concluída — ' + count + ' email' + (count !== 1 ? 's' : '') + ' processado' + (count !== 1 ? 's' : '') + '!';
+    pct.className = 'sync-pct pct-done';
+    pct.textContent = '100%';
+    bar.classList.add('done-bar');
+    toast('✅ ' + count + ' email' + (count !== 1 ? 's' : '') + ' sincronizado' + (count !== 1 ? 's' : '', 'success');
+    loadAll();
+    checkStatus();
+    setTimeout(function() {
+      bar.classList.remove('active', 'done-bar');
+    }, 4000);
+  });
+}
+
+function updateLocal(t) {
+  var idx = allTickets.findIndex(function(x){return x.id===t.id;});
+  if(idx>=0) allTickets[idx]=t;
+  renderList();
+  updateBadge();
+  if(selectedId===t.id){renderDetail(t);renderRight(t);}
+}
+
+// ── Right panel ────────────────────────────────────────────────────────────
+function renderRight(t) {
+  var d = t.shopify_data||{};
+  var order = d.order, product = d.product, customer = d.customer, policies = d.policies||[];
+  var returnWindow = d.return_window;   // 'eligible'|'expired'|'not_delivered'|undefined
+  var daysElapsed  = d.return_days_elapsed;
+  var deliveredAt  = d.delivered_at || (order && order.delivered_at);
+  var html = '';
+
+  // ── Return window verdict badge (shown for return/problem tickets) ────────
+  if (t.category === 'TROCA_DEVOLUCAO' || t.category === 'PROBLEMA_PEDIDO') {
+    var rwColor, rwIcon, rwText;
+    if (returnWindow === 'eligible') {
+      rwColor='#dcfce7;border:1px solid #86efac'; rwIcon='✅';
+      rwText='Dentro do prazo ('+(daysElapsed||0)+' dias desde entrega)';
+    } else if (returnWindow === 'expired') {
+      rwColor='#fee2e2;border:1px solid #fca5a5'; rwIcon='❌';
+      rwText='Fora do prazo ('+(daysElapsed||'?')+' dias desde entrega)';
+    } else if (returnWindow === 'not_delivered') {
+      rwColor='#fef3c7;border:1px solid #fcd34d'; rwIcon='📦';
+      rwText='Pedido ainda não entregue';
+    } else {
+      rwColor='#f1f5f9;border:1px solid #cbd5e1'; rwIcon='❓';
+      rwText='Prazo não verificado — sem dados de entrega';
+    }
+    html += '<div style="background:'+rwColor+';border-radius:10px;padding:10px 12px;margin-bottom:8px">'
+      +'<div style="font-size:11px;color:#475569;font-weight:600;margin-bottom:4px">JANELA DE DEVOLUÇÃO</div>'
+      +'<div style="font-size:13px;font-weight:700;color:#1e293b">'+rwIcon+' '+esc(rwText)+'</div>'
+      +(deliveredAt?'<div style="font-size:11px;color:#64748b;margin-top:3px">Entregue: '+deliveredAt.substring(0,10)+'</div>':'')
+      +'</div>';
+  }
+
+  if (order) {
+    var trk = (order.tracking||[])[0]||{};
+
+    // ── Status badges helper ───────────────────────────────────────────────
+    function fulfillBadge(s) {
+      var map = {fulfilled:'✅ Enviado',unfulfilled:'⏳ Aguardando envio',partial:'🔀 Parcial'};
+      var cls = {fulfilled:'status-fulfilled',unfulfilled:'status-unfulfilled',partial:'status-partial'};
+      return '<span class="status-badge '+(cls[s]||'status-unfulfilled')+'">'+(map[s]||s||'—')+'</span>';
+    }
+    function payBadge(s) {
+      var map = {paid:'✅ Pago',pending:'⏳ Pendente',refunded:'↩️ Reembolsado',partially_refunded:'↩️ Parcialmente Reemb.',voided:'🚫 Cancelado',authorized:'🔐 Autorizado'};
+      var cls = {paid:'status-paid',pending:'status-pending',refunded:'status-refunded',partially_refunded:'status-refunded',voided:'status-refunded',authorized:'status-confirmed'};
+      return '<span class="status-badge '+(cls[s]||'status-pending')+'">'+(map[s]||s||'—')+'</span>';
+    }
+    function shipBadge(s) {
+      var map = {delivered:'✅ Entregue',confirmed:'📬 Confirmado',in_transit:'🚚 Em trânsito',out_for_delivery:'🚴 Saiu p/ entrega',attempted_delivery:'⚠️ Tentativa',failure:'❌ Falha',label_printed:'🏷️ Etiqueta',label_purchased:'🏷️ Etiqueta'};
+      var cls = {delivered:'status-delivered',confirmed:'status-confirmed',in_transit:'status-in_transit',out_for_delivery:'status-in_transit',attempted_delivery:'status-unfulfilled',failure:'status-refunded'};
+      return s ? '<span class="status-badge '+(cls[s]||'status-confirmed')+'">'+(map[s]||s)+'</span>' : '';
+    }
+
+    // ── Order items with price ─────────────────────────────────────────────
+    var itemsHTML = (order.items||[]).map(function(i){
+      var name = esc(i.title||'');
+      var variant = i.variant_title ? '<span class="item-variant">'+esc(i.variant_title)+'</span>' : '';
+      var qty = i.quantity > 1 ? ' <span style="color:#9ca3af">×'+i.quantity+'</span>' : '';
+      var price = i.price ? '<span class="item-price">'+(order.currency||'$')+' '+esc(i.price)+'</span>' : '';
+      return '<div class="item-row"><span class="item-name">'+name+qty+variant+'</span>'+price+'</div>';
+    }).join('');
+
+    // ── Tracking ──────────────────────────────────────────────────────────
+    var trkHTML = '';
+    if (trk.tracking_number) {
+      var trkLink = trk.tracking_url
+        ? '<a href="'+esc(trk.tracking_url)+'" target="_blank" style="font-family:monospace;font-size:10px;color:#3b82f6;text-decoration:none">'+esc(trk.tracking_number)+' ↗</a>'
+        : '<span style="font-family:monospace;font-size:10px">'+esc(trk.tracking_number)+'</span>';
+      trkHTML = '<div class="shopify-row"><span class="shopify-label">'+(trk.tracking_company||'Rastreio')+'</span><span class="shopify-value">'+trkLink+'</span></div>'
+        +(trk.shipment_status?'<div class="shopify-row"><span class="shopify-label">Status envio</span><span class="shopify-value">'+shipBadge(trk.shipment_status)+'</span></div>':'');
+    }
+
+    // ── Shipping address ──────────────────────────────────────────────────
+    var addr = order.shipping_address || {};
+    var addrLine = [addr.address, addr.city, addr.province, addr.zip, addr.country].filter(Boolean).join(', ');
+    var addrHTML = addrLine ? '<div class="shopify-row"><span class="shopify-label">Endereço</span><span class="shopify-value" style="font-size:11px">'+esc(addrLine)+'</span></div>' : '';
+
+    // ── Policy link ───────────────────────────────────────────────────────
+    var rp = policies.find(function(p){return p.title&&(p.title.toLowerCase().includes('refund')||p.title.toLowerCase().includes('devol'));});
+    var polHTML = rp?'<div class="policy-box"><div class="policy-title">📋 Política Aplicável</div><div class="policy-body">'+esc((rp.body||'').substring(0,200))+(rp.body&&rp.body.length>200?'…':'')+'</div>'+(rp.url?'<a href="'+esc(rp.url)+'" target="_blank" style="font-size:11px;color:#3b82f6;display:block;margin-top:4px">Ver política completa →</a>':'')+'</div>':'';
+
+    html += '<div class="shopify-card">'
+      // Header
+      +'<div class="shopify-header"><div class="shopify-icon">🛍️</div><div class="shopify-title">Dados Shopify</div>'
+      +'<span style="margin-left:auto;font-size:12px;font-weight:700;color:#374151">'+esc(order.order_number||'')+'</span></div>'
+
+      // ── Order info section ──
+      +'<div class="shopify-section-title">Pedido</div>'
+      +'<div class="shopify-row"><span class="shopify-label">Número</span><span class="shopify-value">'+esc(order.order_number||'—')+'</span></div>'
+      +(order.created_at?'<div class="shopify-row"><span class="shopify-label">Data do pedido</span><span class="shopify-value">'+fmtDate(order.created_at)+'</span></div>':'')
+      +'<div class="shopify-row"><span class="shopify-label">Valor total</span><span class="shopify-value" style="color:#16a34a;font-size:13px">'+esc(order.currency||'')+'&nbsp;'+esc(order.total_price||'—')+'</span></div>'
+
+      // ── Status section ──
+      +'<hr class="shopify-divider">'
+      +'<div class="shopify-section-title">Status</div>'
+      +'<div class="shopify-row"><span class="shopify-label">Pagamento</span><span class="shopify-value">'+payBadge(order.financial_status)+'</span></div>'
+      +'<div class="shopify-row"><span class="shopify-label">Entrega</span><span class="shopify-value">'+fulfillBadge(order.fulfillment_status)+'</span></div>'
+
+      // ── Dates section ──
+      +(order.created_at || deliveredAt || trk.updated_at ? '<hr class="shopify-divider"><div class="shopify-section-title">Datas</div>' : '')
+      +(order.created_at?'<div class="shopify-row"><span class="shopify-label">Pedido realizado</span><span class="shopify-value">'+fmtDate(order.created_at)+'</span></div>':'')
+      +(trk.updated_at && !deliveredAt?'<div class="shopify-row"><span class="shopify-label">Enviado em</span><span class="shopify-value">'+fmtDate(trk.updated_at)+'</span></div>':'')
+      +(deliveredAt?'<div class="shopify-row"><span class="shopify-label">Entregue em</span><span class="shopify-value" style="color:#16a34a;font-weight:700">'+fmtDate(deliveredAt)+'</span></div>':'')
+
+      // ── Tracking section ──
+      +(trkHTML?'<hr class="shopify-divider"><div class="shopify-section-title">Rastreamento</div>'+trkHTML:'')
+
+      // ── Shipping address ──
+      +(addrHTML?'<hr class="shopify-divider"><div class="shopify-section-title">Endereço de entrega</div>'+addrHTML:'')
+
+      // ── Items section ──
+      +(itemsHTML?'<hr class="shopify-divider"><div class="shopify-section-title">Itens do pedido</div>'+itemsHTML:'')
+
+      +polHTML+'</div>';
+  } else if (product) {
+    var price = product.variants&&product.variants[0]?product.variants[0].price:'—';
+    html += '<div class="shopify-card">'
+      +'<div class="shopify-header"><div class="shopify-icon">💍</div><div class="shopify-title">Produto</div></div>'
+      +'<div class="shopify-row"><span class="shopify-label">Nome</span><span class="shopify-value">'+esc(product.title||'—')+'</span></div>'
+      +'<div class="shopify-row"><span class="shopify-label">Preço</span><span class="shopify-value">R$ '+price+'</span></div>'
+      +'<div class="shopify-row"><span class="shopify-label">Disponível</span><span class="shopify-value">'+(product.available?'✅ Sim':'❌ Não')+'</span></div>'
+      +'</div>';
+  } else {
+    html += '<div class="shopify-card" style="opacity:.6"><div class="shopify-header"><div class="shopify-icon">🛍️</div><div class="shopify-title">Dados Shopify</div></div><div style="font-size:12px;color:#6b7280">Nenhum dado encontrado.</div></div>';
+  }
+
+  if (customer) {
+    html += '<div class="sm-card"><div class="sm-card-title">👤 Histórico do Cliente</div>'
+      +'<div class="sm-row"><span class="sm-label">Nome</span><span class="sm-value">'+esc((customer.first_name||'')+' '+(customer.last_name||''))+'</span></div>'
+      +'<div class="sm-row"><span class="sm-label">Pedidos</span><span class="sm-value">'+(customer.orders_count||0)+'</span></div>'
+      +(customer.total_spent?'<div class="sm-row"><span class="sm-label">Total gasto</span><span class="sm-value">$'+customer.total_spent+'</span></div>':'')
+      +'</div>';
+  }
+
+  var orderId = order&&order.id;
+  html += '<div class="sm-card"><div class="sm-card-title">⚡ Ações Rápidas</div>'
+    +(orderId?'<button class="quick-btn" onclick="window.open(\'https://rachap-8j.myshopify.com/admin/orders/'+orderId+'\',\'_blank\')">🔗 Ver pedido no Shopify</button>':'')
+    +(t.gmail_thread_id?'<button class="quick-btn" onclick="window.open(\'https://mail.google.com/mail/u/0/#all/'+t.gmail_thread_id+'\',\'_blank\')">📧 Ver thread no Gmail</button>':'')
+    +'</div>';
+
+  document.getElementById('right-panel').innerHTML = html;
+}
+
+// ── Charts ─────────────────────────────────────────────────────────────────
+function renderCharts(s) {
+  var cats = s.categories||{};
+  var total = Object.values(cats).reduce(function(a,b){return a+b;},0)||1;
+  var catNames = {STATUS_PEDIDO:'📦 Status Pedido',TROCA_DEVOLUCAO:'🔄 Troca/Dev.',DUVIDA_PRODUTO:'🛍️ Produto',CANCELAMENTO:'❌ Cancelamento',PROBLEMA_PEDIDO:'⚠️ Problema',OUTRO:'💬 Outro'};
+  document.getElementById('cat-chart').innerHTML = Object.entries(cats).map(function(e){
+    var pct=Math.round(e[1]/total*100);
+    return '<div class="bar-row"><span class="bar-label">'+(catNames[e[0]]||e[0])+'</span><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%"></div></div><span class="bar-pct">'+pct+'%</span></div>';
+  }).join('');
+
+  var sts = [{l:'Pendentes',v:s.pending,c:'#f59e0b'},{l:'Aprovados',v:s.approved||0,c:'#6366f1'},{l:'Enviados',v:s.sent,c:'#22c55e'},{l:'Descartados',v:s.rejected||0,c:'#ef4444'}];
+  var st = sts.reduce(function(a,b){return a+b.v;},0)||1;
+  document.getElementById('status-chart').innerHTML = sts.map(function(x){
+    var pct=Math.round(x.v/st*100);
+    return '<div class="bar-row"><span class="bar-label">'+x.l+'</span><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+x.c+'"></div></div><span class="bar-pct">'+pct+'%</span></div>';
+  }).join('');
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try {
+    var d = new Date(iso);
+    return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+  } catch(e) { return String(iso).substring(0,10); }
+}
+
+function toast(msg, type) {
+  var el = document.createElement('div');
+  el.className = 'toast toast-'+(type||'success');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){el.remove();},3500);
+}
+</script>
+</body>
+</html>
