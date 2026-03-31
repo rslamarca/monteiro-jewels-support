@@ -1,7 +1,7 @@
 """
-Database layer — supports both:
-  • Supabase / PostgreSQL  (when DATABASE_URL env var is set)
-  • Local SQLite           (fallback for Mac dev)
+Database layer â supports both:
+  â¢ Supabase / PostgreSQL  (when DATABASE_URL env var is set)
+  â¢ Local SQLite           (fallback for Mac dev)
 """
 import os
 import json
@@ -53,7 +53,7 @@ def _row_to_dict(row):
 
 def init_db():
     if _USE_PG:
-        print("  ✓ Database: Supabase PostgreSQL")
+        print("  â Database: Supabase PostgreSQL")
         return
     conn = get_connection()
     conn.executescript("""
@@ -63,7 +63,7 @@ def init_db():
     """)
     conn.commit()
     conn.close()
-    print(f"  ✓ Database: {DB_PATH}")
+    print(f"  â Database: {DB_PATH}")
 
 
 def _shopify_value(data):
@@ -146,5 +146,5 @@ def get_stats():
 
 def add_log(ticket_id, action, details=None):
     conn = get_connection()
-    conn.execute(f"INSERT INTO ticket_logs (ticket_id,action,details,created_at) VARUES{PH},{PH},{PH},{PH})", (ticket_id, action, details, _now()))
+    conn.execute(f"INSERT INTO ticket_logs (ticket_id,action,details,created_at) VALUES ({PH},{PH},{PH},{PH})", (ticket_id, action, details, _now()))
     _commit_close(conn)
