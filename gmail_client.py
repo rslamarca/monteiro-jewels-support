@@ -1,230 +1,200 @@
 """
-Gmail API client using OAuth2.
-Handles reading emails, creating drafts, and sending replies.
+Gmail IMAP client using App Password (no OAuth2 required).
+
+Reads emails via imaplib (Python stdlib); sending is handled by SMTP in main.py.
+Set GMAIL_USER and GMAIL_APP_PASSWORD environment variables to enable.
 """
 import os
 import json
+import email
+import imaplib
 import base64
-from email.mime.text import MIMEText
 from typing import Optional
+from email.header import decode_header as _decode_header
 
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-
-SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
-    "https://www.googleapis.com/auth/gmail.send",
-    "https://www.googleapis.com/auth/gmail.compose",
-    "https://www.googleapis.com/auth/gmail.modify",
-]
-
-TOKEN_FILE = "gmail_token.json"
+# ─── Constants (kept for backward compat with main.py checks) ─────────────────
+TOKEN_FILE       = "gmail_token.json"
 CREDENTIALS_FILE = "gmail_credentials.json"
+SCOPES           = []   # Not used in IMAP mode; kept so main.py imports cleanly
+
+_GMAIL_USER = os.getenv("GMAIL_USER", "")
+_GMAIL_PWD  = os.getenv("GMAIL_APP_PASSWORD", "")
 
 
-def get_gmail_service():
-    """Build and return an authenticated Gmail service."""
-    creds = None
+def _imap_ready() -> bool:
+    return bool(_GMAIL_USER and _GMAIL_PWD
+                and "your_" not in _GMAIL_PWD
+                and len(_GMAIL_PWD.replace(" ", "")) >= 16)
 
-    # Option 0: pre-authorized token via GMAIL_TOKEN_JSON env var (for server deployments like Render).
-    # Set GMAIL_TOKEN_JSON to the contents of your local gmail_token.json (plain JSON or base64-encoded).
-    token_json_env = os.getenv("GMAIL_TOKEN_JSON", "")
-    if token_json_env and not os.path.exists(TOKEN_FILE):
+
+# ─── Create a marker file so main.py's os.path.exists(TOKEN_FILE) passes ──────
+def _ensure_marker():
+    global TOKEN_FILE
+    if not _imap_ready():
+        return
+    for candidate in [TOKEN_FILE, "/tmp/gmail_token.json"]:
+        if os.path.exists(candidate):
+            TOKEN_FILE = candidate
+            return
         try:
-            try:
-                token_data = base64.b64decode(token_json_env).decode("utf-8")
-            except Exception:
-                token_data = token_json_env
-            with open(TOKEN_FILE, "w") as f:
-                f.write(token_data)
+            with open(candidate, "w") as f:
+                json.dump({"type": "imap", "user": _GMAIL_USER}, f)
+            TOKEN_FILE = candidate
+            return
         except Exception:
-            pass
+            continue
 
-    # Load existing token if available
-    if os.path.exists(TOKEN_FILE):
-        try:
-            creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
-        except Exception:
-            creds = None
+_ensure_marker()
 
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            # Persist refreshed token
-            with open(TOKEN_FILE, "w") as token:
-                token.write(creds.to_json())
-            return build("gmail", "v1", credentials=creds)
+
+# ─── IMAP helpers ──────────────────────────────────────────────────────────────
+
+def _imap_connect() -> imaplib.IMAP4_SSL:
+    """Open an authenticated IMAP4_SSL connection to Gmail."""
+    if not _imap_ready():
+        raise RuntimeError(
+            "Gmail not configured. Set GMAIL_USER and GMAIL_APP_PASSWORD "
+            "(use a 16-char App Password, not your regular password)."
+        )
+    mail = imaplib.IMAP4_SSL("imap.gmail.com", 993)
+    mail.login(_GMAIL_USER, _GMAIL_PWD)
+    return mail
+
+
+def _decode_str(value: str) -> str:
+    """Decode RFC 2047-encoded header value."""
+    if not value:
+        return ""
+    parts = _decode_header(value)
+    decoded = []
+    for part, charset in parts:
+        if isinstance(part, bytes):
+            decoded.append(part.decode(charset or "utf-8", errors="replace"))
         else:
-            # Option 1: credentials JSON file (preferred for local use)
-            if os.path.exists(CREDENTIALS_FILE):
-                flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
-
-            # Option 2: env variables GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET
-            elif os.getenv("GMAIL_CLIENT_ID") and os.getenv("GMAIL_CLIENT_SECRET") \
-                    and not os.getenv("GMAIL_CLIENT_ID", "").startswith("your_"):
-                client_config = {
-                    "installed": {
-                        "client_id": os.getenv("GMAIL_CLIENT_ID"),
-                        "client_secret": os.getenv("GMAIL_CLIENT_SECRET"),
-                        "redirect_uris": ["http://localhost"],
-                        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                        "token_uri": "https://oauth2.googleapis.com/token",
-                    }
-                }
-                flow = InstalledAppFlow.from_client_config(client_config, SCOPES)
-
-            else:
-                raise FileNotFoundError(
-                    "Gmail credentials not found. Options:\n"
-                    "  1) Set GMAIL_TOKEN_JSON env var to the contents of your local gmail_token.json\n"
-                    "  2) Download 'gmail_credentials.json' from Google Cloud Console and place it in the app folder\n"
-                    "  3) Set GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET in the .env file.\n"
-                    "See README.md for step-by-step instructions."
-                )
-
-            creds = flow.run_local_server(port=8090, open_browser=True)
-
-        # Save refreshed/new token
-        with open(TOKEN_FILE, "w") as token:
-            token.write(creds.to_json())
-
-    return build("gmail", "v1", credentials=creds)
+            decoded.append(part)
+    return "".join(decoded)
 
 
-# ─── Read Emails ─────────────────────────────────────────────────────────────
-
-def fetch_unread_emails(max_results: int = 20, label: str = "INBOX") -> list[dict]:
-    """Fetch unread emails from inbox."""
-    service = get_gmail_service()
-    results = service.users().messages().list(
-        userId="me",
-        q=f"is:unread label:{label}",
-        maxResults=max_results,
-    ).execute()
-
-    messages = results.get("messages", [])
-    emails = []
-    for msg_ref in messages:
-        msg = service.users().messages().get(
-            userId="me", id=msg_ref["id"], format="full"
-        ).execute()
-        emails.append(_parse_message(msg))
-
-    return emails
-
-
-def fetch_email_by_id(message_id: str) -> dict:
-    """Fetch a specific email by message ID."""
-    service = get_gmail_service()
-    msg = service.users().messages().get(
-        userId="me", id=message_id, format="full"
-    ).execute()
-    return _parse_message(msg)
-
-
-def fetch_thread(thread_id: str) -> list[dict]:
-    """Fetch all messages in a thread."""
-    service = get_gmail_service()
-    thread = service.users().threads().get(
-        userId="me", id=thread_id, format="full"
-    ).execute()
-    return [_parse_message(msg) for msg in thread.get("messages", [])]
-
-
-def _parse_message(msg: dict) -> dict:
-    """Parse Gmail message into a clean dict."""
-    headers = {h["name"].lower(): h["value"] for h in msg["payload"].get("headers", [])}
-    body = _extract_body(msg["payload"])
-
-    return {
-        "id": msg["id"],
-        "thread_id": msg["threadId"],
-        "from": headers.get("from", ""),
-        "to": headers.get("to", ""),
-        "subject": headers.get("subject", ""),
-        "date": headers.get("date", ""),
-        "body": body,
-        "labels": msg.get("labelIds", []),
-        "snippet": msg.get("snippet", ""),
-    }
-
-
-def _extract_body(payload: dict) -> str:
-    """Extract text body from message payload."""
-    if payload.get("mimeType") == "text/plain" and payload.get("body", {}).get("data"):
-        return base64.urlsafe_b64decode(payload["body"]["data"]).decode("utf-8", errors="replace")
-
-    parts = payload.get("parts", [])
-    for part in parts:
-        if part.get("mimeType") == "text/plain" and part.get("body", {}).get("data"):
-            return base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8", errors="replace")
-        if part.get("parts"):
-            result = _extract_body(part)
-            if result:
-                return result
-
-    # Fallback: try HTML
-    for part in parts:
-        if part.get("mimeType") == "text/html" and part.get("body", {}).get("data"):
-            return base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8", errors="replace")
-
+def _extract_body(msg: email.message.Message) -> str:
+    """Extract plain-text body, falling back to HTML if needed."""
+    if msg.is_multipart():
+        # Prefer text/plain
+        for part in msg.walk():
+            ct  = part.get_content_type()
+            cd  = str(part.get("Content-Disposition", ""))
+            if ct == "text/plain" and "attachment" not in cd:
+                charset = part.get_content_charset() or "utf-8"
+                payload = part.get_payload(decode=True)
+                if payload:
+                    return payload.decode(charset, errors="replace")
+        # Fallback: HTML
+        for part in msg.walk():
+            if part.get_content_type() == "text/html":
+                charset = part.get_content_charset() or "utf-8"
+                payload = part.get_payload(decode=True)
+                if payload:
+                    return payload.decode(charset, errors="replace")
+    else:
+        payload = msg.get_payload(decode=True)
+        if payload:
+            charset = msg.get_content_charset() or "utf-8"
+            return payload.decode(charset, errors="replace")
     return ""
 
 
-# ─── Send / Draft ────────────────────────────────────────────────────────────
+def _parse_imap_message(uid: bytes, raw: bytes) -> dict:
+    """Parse raw RFC 822 bytes into a clean dict matching the original API."""
+    msg      = email.message_from_bytes(raw)
+    body     = _extract_body(msg)
+    msg_id   = msg.get("Message-ID", uid.decode()).strip()
+    thread_id = msg.get("Thread-Index", msg_id)
 
-def create_draft(to: str, subject: str, body: str, thread_id: Optional[str] = None) -> dict:
-    """Create a Gmail draft."""
-    service = get_gmail_service()
-    message = _create_message(to, subject, body)
-
-    draft_body = {"message": message}
-    if thread_id:
-        draft_body["message"]["threadId"] = thread_id
-
-    draft = service.users().drafts().create(userId="me", body=draft_body).execute()
-    return {"draft_id": draft["id"], "message_id": draft["message"]["id"]}
-
-
-def send_draft(draft_id: str) -> dict:
-    """Send an existing draft."""
-    service = get_gmail_service()
-    result = service.users().drafts().send(userId="me", body={"id": draft_id}).execute()
-    return {"message_id": result["id"], "thread_id": result["threadId"]}
+    return {
+        "id":        uid.decode(),   # IMAP UID — used for mark_as_read
+        "thread_id": thread_id,
+        "from":      _decode_str(msg.get("From", "")),
+        "to":        msg.get("To", ""),
+        "subject":   _decode_str(msg.get("Subject", "")),
+        "date":      msg.get("Date", ""),
+        "body":      body,
+        "labels":    ["INBOX", "UNREAD"],
+        "snippet":   body[:200].replace("\n", " "),
+    }
 
 
-def send_reply(to: str, subject: str, body: str, thread_id: str, message_id: str) -> dict:
-    """Send a reply to an existing thread."""
-    service = get_gmail_service()
-    message = _create_message(to, f"Re: {subject}", body)
-    message["threadId"] = thread_id
+# ─── Public API ───────────────────────────────────────────────────────────────
 
-    # Add In-Reply-To header
-    raw = base64.urlsafe_b64decode(message["raw"])
-    raw_str = raw.decode("utf-8")
-    raw_str = raw_str.replace("\n\n", f"\nIn-Reply-To: {message_id}\nReferences: {message_id}\n\n", 1)
-    message["raw"] = base64.urlsafe_b64encode(raw_str.encode("utf-8")).decode("utf-8")
+def fetch_unread_emails(max_results: int = 20, label: str = "INBOX") -> list:
+    """Fetch unread emails from Gmail via IMAP."""
+    mail = _imap_connect()
+    try:
+        mail.select("INBOX")
+        _, data = mail.search(None, "UNSEEN")
+        uids = data[0].split()
+        uids = uids[-max_results:]   # keep most recent N
 
-    result = service.users().messages().send(userId="me", body=message).execute()
-    return {"message_id": result["id"], "thread_id": result["threadId"]}
+        emails = []
+        for uid in reversed(uids):   # newest first
+            _, msg_data = mail.fetch(uid, "(RFC822)")
+            if msg_data and msg_data[0]:
+                emails.append(_parse_imap_message(uid, msg_data[0][1]))
+        return emails
+    finally:
+        try:
+            mail.logout()
+        except Exception:
+            pass
+
+
+def fetch_email_by_id(message_id: str) -> dict:
+    """Fetch a specific email by IMAP UID."""
+    mail = _imap_connect()
+    try:
+        mail.select("INBOX")
+        _, msg_data = mail.fetch(message_id.encode(), "(RFC822)")
+        return _parse_imap_message(message_id.encode(), msg_data[0][1])
+    finally:
+        try:
+            mail.logout()
+        except Exception:
+            pass
+
+
+def fetch_thread(thread_id: str) -> list:
+    """Fetch messages in a thread (simplified: returns the single message)."""
+    try:
+        return [fetch_email_by_id(thread_id)]
+    except Exception:
+        return []
 
 
 def mark_as_read(message_id: str):
-    """Remove UNREAD label from a message."""
-    service = get_gmail_service()
-    service.users().messages().modify(
-        userId="me",
-        id=message_id,
-        body={"removeLabelIds": ["UNREAD"]},
-    ).execute()
+    """Mark an email as read by setting the \\Seen IMAP flag."""
+    try:
+        mail = _imap_connect()
+        try:
+            mail.select("INBOX")
+            mail.store(message_id.encode(), "+FLAGS", "\\Seen")
+        finally:
+            mail.logout()
+    except Exception:
+        pass   # Non-critical — email was processed even if flag fails
 
 
-def _create_message(to: str, subject: str, body: str) -> dict:
-    """Create a raw email message."""
-    msg = MIMEText(body, "plain", "utf-8")
-    msg["to"] = to
-    msg["subject"] = subject
-    raw = base64.urlsafe_b64encode(msg.as_bytes()).decode("utf-8")
-    return {"raw": raw}
+# ─── Stubs (sending is handled by SMTP in main.py) ───────────────────────────
+
+def create_draft(to: str, subject: str, body: str,
+                 thread_id: Optional[str] = None) -> dict:
+    """Sending handled by SMTP in main.py; this is a no-op stub."""
+    return {"draft_id": "smtp-mode", "message_id": "smtp-mode"}
+
+
+def send_draft(draft_id: str) -> dict:
+    """Sending handled by SMTP in main.py; this is a no-op stub."""
+    return {"message_id": "smtp-mode", "thread_id": "smtp-mode"}
+
+
+def send_reply(to: str, subject: str, body: str,
+               thread_id: str, message_id: str) -> dict:
+    """Sending handled by SMTP in main.py; this is a no-op stub."""
+    return {"message_id": "smtp-mode", "thread_id": thread_id}
