@@ -1,5 +1,5 @@
 """
-Monteiro Jewels — Support Agent Dashboard
+Monteiro Jewels â Support Agent Dashboard
 Backend using Python's built-in http.server (zero external dependencies for core).
 """
 import os
@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# ── SSL fix for macOS (Python.org installer doesn't use system cert store) ───
+# ââ SSL fix for macOS (Python.org installer doesn't use system cert store) âââ
 # Patch REQUESTS_CA_BUNDLE and SSL_CERT_FILE so all HTTPS calls use certifi.
 try:
     import certifi as _certifi
@@ -40,7 +40,7 @@ import database
 import shopify_client
 
 
-# ─── SMTP Email Sending (Gmail App Password) ─────────────────────────────────
+# âââ SMTP Email Sending (Gmail App Password) âââââââââââââââââââââââââââââââââ
 
 def smtp_ready() -> bool:
     user = os.getenv("GMAIL_USER", "")
@@ -83,10 +83,10 @@ try:
     GMAIL_AVAILABLE = True
 except ImportError:
     GMAIL_AVAILABLE = False
-    print("  ⚠  Gmail client unavailable (install google-api-python-client)")
+    print("  â   Gmail client unavailable (install google-api-python-client)")
 
 
-# ─── Agent Configuration & Policy ───────────────────────────────────────────
+# âââ Agent Configuration & Policy âââââââââââââââââââââââââââââââââââââââââââ
 #
 # This section defines the agent's behaviour, tone, return rules, and the
 # policy URLs the draft generator uses to construct accurate responses.
@@ -94,7 +94,7 @@ except ImportError:
 
 AGENT_CONFIG = {
 
-    # ── Brand voice ──────────────────────────────────────────────────────────
+    # ââ Brand voice ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     "brand_name": "Monteiro Jewels",
     "tone": (
         "Always be warm, polite, and professional. "
@@ -104,7 +104,7 @@ AGENT_CONFIG = {
         "Keep responses concise but complete."
     ),
 
-    # ── Return / exchange policy ──────────────────────────────────────────────
+    # ââ Return / exchange policy ââââââââââââââââââââââââââââââââââââââââââââââ
     "return_policy": {
         "window_days": 14,          # calendar days after confirmed delivery
         "requires_photos": True,    # always request photo evidence
@@ -117,32 +117,32 @@ AGENT_CONFIG = {
         "url": "https://monteirojewels.com/policies/refund-policy",
     },
 
-    # ── Shipping policy ───────────────────────────────────────────────────────
+    # ââ Shipping policy âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     "shipping_policy": {
         "url": "https://monteirojewels.com/policies/shipping-policy",
-        "standard_days": "5–10 business days",
-        "express_days":  "2–3 business days",
+        "standard_days": "5â10 business days",
+        "express_days":  "2â3 business days",
     },
 
-    # ── Privacy & Terms ───────────────────────────────────────────────────────
+    # ââ Privacy & Terms âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     "privacy_policy_url": "https://monteirojewels.com/policies/privacy-policy",
     "terms_url":          "https://monteirojewels.com/policies/terms-of-service",
 
-    # ── Contact ───────────────────────────────────────────────────────────────
+    # ââ Contact âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     "support_email": "monteirojewels@gmail.com",
     "store_url":     "https://monteirojewels.com",
 }
 
 
-# ─── Email Classification & Draft Generation ────────────────────────────────
+# âââ Email Classification & Draft Generation ââââââââââââââââââââââââââââââââ
 
 def classify_email(subject: str, body: str) -> str:
     text = f"{subject} {body}".lower()
     scores = {
         "CANCELAMENTO": sum(1 for w in ["cancel", "cancelar", "cancelamento"] if w in text),
         "TROCA_DEVOLUCAO": sum(1 for w in ["return", "devol", "troca", "exchange", "refund", "reembolso"] if w in text),
-        "STATUS_PEDIDO": sum(1 for w in ["status", "rastreio", "tracking", "entrega", "delivery", "onde está", "where is", "enviado", "shipped"] if w in text),
-        "DUVIDA_PRODUTO": sum(1 for w in ["disponível", "available", "preço", "price", "estoque", "tamanho", "dúvida", "question"] if w in text),
+        "STATUS_PEDIDO": sum(1 for w in ["status", "rastreio", "tracking", "entrega", "delivery", "onde estÃ¡", "where is", "enviado", "shipped"] if w in text),
+        "DUVIDA_PRODUTO": sum(1 for w in ["disponÃ­vel", "available", "preÃ§o", "price", "estoque", "tamanho", "dÃºvida", "question"] if w in text),
         "PROBLEMA_PEDIDO": sum(1 for w in ["problema", "problem", "defeito", "errado", "wrong", "danificado", "damaged", "faltando", "missing"] if w in text),
     }
     best = max(scores, key=scores.get)
@@ -151,7 +151,7 @@ def classify_email(subject: str, body: str) -> str:
 
 def detect_language(text: str) -> str:
     text_lower = text.lower()
-    pt = sum(1 for w in ["olá", "obrigado", "pedido", "gostaria", "por favor", "entrega", "produto"] if w in text_lower)
+    pt = sum(1 for w in ["olÃ¡", "obrigado", "pedido", "gostaria", "por favor", "entrega", "produto"] if w in text_lower)
     en = sum(1 for w in ["hello", "thank", "order", "would like", "please", "delivery", "product"] if w in text_lower)
     es = sum(1 for w in ["hola", "gracias", "pedido", "quisiera", "por favor", "producto"] if w in text_lower)
     if en > pt and en > es:
@@ -189,11 +189,11 @@ def _extract_order_number(text: str) -> str | None:
     """Return the first order number found in text, or None.
 
     Patterns recognised (case-insensitive):
-      order #2308 | pedido #2308 | order 2308 | pedido nº 2308 | #2308 | nº 2308
-    Falls back to any standalone 3–6 digit number.
+      order #2308 | pedido #2308 | order 2308 | pedido nÂº 2308 | #2308 | nÂº 2308
+    Falls back to any standalone 3â6 digit number.
     """
     # Explicit keyword patterns first
-    m = re.search(r"(?:order|pedido|nº|numero|number)\s*[#nº]?\s*(\d{3,6})", text, re.IGNORECASE)
+    m = re.search(r"(?:order|pedido|nÂº|numero|number)\s*[#nÂº]?\s*(\d{3,6})", text, re.IGNORECASE)
     if m:
         return m.group(1)
     # Hash prefix
@@ -208,9 +208,9 @@ def _extract_order_number(text: str) -> str | None:
     return None
 
 
-# Jewelry product keywords — used to extract product mentions from any email
+# Jewelry product keywords â used to extract product mentions from any email
 _PRODUCT_KEYWORDS = [
-    "watch", "relógio", "relogio",
+    "watch", "relÃ³gio", "relogio",
     "bracelet", "pulseira",
     "necklace", "colar",
     "ring", "anel",
@@ -221,7 +221,7 @@ _PRODUCT_KEYWORDS = [
     "choker",
     "anklet", "tornozeleira",
     "set", "conjunto",
-    "jewel", "joia", "jóia",
+    "jewel", "joia", "jÃ³ia",
 ]
 
 
@@ -244,7 +244,7 @@ def _extract_product_hints(subject: str, body: str) -> list[str]:
             start = m.start()
             # Take up to 40 chars either side and strip to word boundaries
             snippet = full_text[max(0, start - 30): start + len(kw) + 30]
-            snippet = re.sub(r"[^a-zA-ZÀ-ÿ0-9\s\-]", " ", snippet).strip()
+            snippet = re.sub(r"[^a-zA-ZÃ-Ã¿0-9\s\-]", " ", snippet).strip()
             snippet = " ".join(snippet.split()[:6])   # max 6 words
             if snippet and snippet.lower() not in seen:
                 seen.add(snippet.lower())
@@ -252,7 +252,7 @@ def _extract_product_hints(subject: str, body: str) -> list[str]:
 
     # Pass 2: if subject contains a keyword, add the whole subject as a search
     if any(kw in subject.lower() for kw in _PRODUCT_KEYWORDS):
-        clean_sub = re.sub(r"[^a-zA-ZÀ-ÿ0-9\s]", " ", subject).strip()
+        clean_sub = re.sub(r"[^a-zA-ZÃ-Ã¿0-9\s]", " ", subject).strip()
         if clean_sub.lower() not in seen:
             hints.insert(0, clean_sub)
 
@@ -283,7 +283,7 @@ def query_shopify(ticket: dict) -> dict:  # noqa: C901
     Scanning order (runs for every ticket regardless of category):
       1. Extract order number from SUBJECT first, then BODY
       2. Look for product name mentions in subject + body (jewelry keywords)
-      3. Fetch order by number → also fetch the matching Shopify products for
+      3. Fetch order by number â also fetch the matching Shopify products for
          each line item so the draft can reference exact product names/details
       4. Fallback: fetch recent orders by customer email if no order number found
       5. Resolve product mentions against the Shopify product catalogue
@@ -291,12 +291,12 @@ def query_shopify(ticket: dict) -> dict:  # noqa: C901
       7. Fetch customer history for any ticket where we have an email
 
     Extra fields added to `data`:
-      extracted_order_number  – raw number parsed from email text
-      mentioned_products      – list of Shopify products matched from email text
-      order_item_products     – list of Shopify products matching the order's line items
-      return_window           – 'eligible' | 'expired' | 'not_delivered'
-      return_days_elapsed     – int days since delivery
-      delivered_at            – ISO date string or None
+      extracted_order_number  â raw number parsed from email text
+      mentioned_products      â list of Shopify products matched from email text
+      order_item_products     â list of Shopify products matching the order's line items
+      return_window           â 'eligible' | 'expired' | 'not_delivered'
+      return_days_elapsed     â int days since delivery
+      delivered_at            â ISO date string or None
     """
     data: dict = {}
     subject  = ticket.get("subject", "")
@@ -306,21 +306,21 @@ def query_shopify(ticket: dict) -> dict:  # noqa: C901
     window   = AGENT_CONFIG["return_policy"]["window_days"]
     full_text = f"{subject}\n{body}"
 
-    # ════════════════════════════════════════════════════════════════════════
-    # STEP 1 — Extract order number (subject takes priority)
-    # ════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+    # STEP 1 â Extract order number (subject takes priority)
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     order_num = _extract_order_number(subject) or _extract_order_number(body)
     data["extracted_order_number"] = order_num
 
-    # ════════════════════════════════════════════════════════════════════════
-    # STEP 2 — Extract product hints from the email text (ALL categories)
-    # ════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+    # STEP 2 â Extract product hints from the email text (ALL categories)
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     product_hints = _extract_product_hints(subject, body)
     data["product_hints"] = product_hints  # for debugging / transparency
 
-    # ════════════════════════════════════════════════════════════════════════
-    # STEP 3 — Fetch order by number
-    # ════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+    # STEP 3 â Fetch order by number
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     if order_num:
         try:
             orders = shopify_client.search_orders(order_num)
@@ -335,9 +335,9 @@ def query_shopify(ticket: dict) -> dict:  # noqa: C901
         except Exception as exc:
             data["order_error"] = str(exc)
 
-    # ════════════════════════════════════════════════════════════════════════
-    # STEP 4 — Customer lookup + email-based order fallback
-    # ════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+    # STEP 4 â Customer lookup + email-based order fallback
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     if email:
         try:
             customers = shopify_client.search_customers(email)
@@ -360,13 +360,13 @@ def query_shopify(ticket: dict) -> dict:  # noqa: C901
             except Exception:
                 pass
 
-    # ════════════════════════════════════════════════════════════════════════
-    # STEP 5 — Resolve product mentions against Shopify catalogue (ALL cats)
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+    # STEP 5 â Resolve product mentions against Shopify catalogue (ALL cats)
     #
     # Two sub-steps:
     #   5a. Look up products explicitly named / described in the email text
     #   5b. Look up the actual products from the order's line items
-    # ════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
     # 5a. Scan email text for product references
     mentioned_products = []
@@ -414,9 +414,9 @@ def query_shopify(ticket: dict) -> dict:  # noqa: C901
     if not data.get("product") and order_item_products:
         data["product"] = order_item_products[0]
 
-    # ════════════════════════════════════════════════════════════════════════
-    # STEP 6 — Store policies
-    # ════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+    # STEP 6 â Store policies
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     if category in ("TROCA_DEVOLUCAO", "CANCELAMENTO", "PROBLEMA_PEDIDO"):
         try:
             data["policies"] = shopify_client.get_policies()
@@ -426,20 +426,20 @@ def query_shopify(ticket: dict) -> dict:  # noqa: C901
     return data
 
 
-def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for this dispatcher
+def generate_draft(ticket: dict) -> str:  # noqa: C901 â complexity OK for this dispatcher
     """Generate an intelligent draft response based on ticket data and AGENT_CONFIG policy.
 
     Decision tree:
-      STATUS_PEDIDO    → order status + tracking details
-      TROCA_DEVOLUCAO  → check 14-day delivery window:
-                           eligible    → acknowledge, request photos + email confirm
-                           expired     → politely deny, cite policy
-                           not_delivered → ask for patience, offer tracking
-                           unknown     → ask for order number
-      CANCELAMENTO     → check shipment status; offer cancel or redirect to return
-      PROBLEMA_PEDIDO  → acknowledge, request photos + order details
-      DUVIDA_PRODUTO   → product details from Shopify
-      OUTRO            → generic acknowledgement
+      STATUS_PEDIDO    â order status + tracking details
+      TROCA_DEVOLUCAO  â check 14-day delivery window:
+                           eligible    â acknowledge, request photos + email confirm
+                           expired     â politely deny, cite policy
+                           not_delivered â ask for patience, offer tracking
+                           unknown     â ask for order number
+      CANCELAMENTO     â check shipment status; offer cancel or redirect to return
+      PROBLEMA_PEDIDO  â acknowledge, request photos + order details
+      DUVIDA_PRODUTO   â product details from Shopify
+      OUTRO            â generic acknowledgement
     """
     cfg      = AGENT_CONFIG
     brand    = cfg["brand_name"]
@@ -453,18 +453,18 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
     is_en = lang == "en"
     is_es = lang == "es"
 
-    # ── i18n helpers ──────────────────────────────────────────────────────────
+    # ââ i18n helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     def t(en: str, pt: str, es: str = "") -> str:
         if is_en: return en
         if is_es: return es or pt
         return pt
 
-    greeting  = t(f"Hi {name}", f"Olá {name}", f"Hola {name}")
-    thanks    = t("Thank you for contacting us!", "Obrigado por entrar em contato!", "¡Gracias por contactarnos!")
+    greeting  = t(f"Hi {name}", f"OlÃ¡ {name}", f"Hola {name}")
+    thanks    = t("Thank you for contacting us!", "Obrigado por entrar em contato!", "Â¡Gracias por contactarnos!")
     closing   = t(f"Best regards,\n{brand}", f"Atenciosamente,\n{brand}", f"Atentamente,\n{brand}")
     help_line = t("If you have any further questions, feel free to reach out.",
-                  "Qualquer dúvida adicional, estou à disposição.",
-                  "Si tiene más preguntas, no dude en escribirnos.")
+                  "Qualquer dÃºvida adicional, estou Ã  disposiÃ§Ã£o.",
+                  "Si tiene mÃ¡s preguntas, no dude en escribirnos.")
 
     order              = data.get("order")
     product            = data.get("product")           # first matched product (text OR order item)
@@ -487,16 +487,16 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
         if p.get("variants"):
             price = p["variants"][0].get("price")
             if price:
-                parts.append(t(f"(price: {price})", f"(preço: R$ {price})"))
+                parts.append(t(f"(price: {price})", f"(preÃ§o: R$ {price})"))
         if p.get("url"):
-            parts.append(t(f"— {p['url']}", f"— {p['url']}"))
+            parts.append(t(f"â {p['url']}", f"â {p['url']}"))
         return " ".join(parts)
 
     lines = [f"{greeting},\n", f"{thanks}\n"]
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     # CATEGORY: ORDER STATUS
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     if category == "STATUS_PEDIDO":
         if order:
             on      = order.get("order_number", "")
@@ -508,8 +508,8 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
 
             # Human-friendly status labels
             status_label = {
-                "fulfilled":   t("Shipped ✓",           "Enviado ✓"),
-                "unfulfilled": t("Processing / not shipped yet", "Em processamento — ainda não enviado"),
+                "fulfilled":   t("Shipped â",           "Enviado â"),
+                "unfulfilled": t("Processing / not shipped yet", "Em processamento â ainda nÃ£o enviado"),
                 "partial":     t("Partially shipped",   "Enviado parcialmente"),
                 "restocked":   t("Returned to stock",   "Devolvido ao estoque"),
             }.get(status, status)
@@ -523,7 +523,7 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                 if tr.get("tracking_number"):
                     lines.append("")
                     lines.append(t(f"Tracking number: {tr['tracking_number']}",
-                                   f"Código de rastreio: {tr['tracking_number']}"))
+                                   f"CÃ³digo de rastreio: {tr['tracking_number']}"))
                     if tr.get("tracking_url"):
                         lines.append(t(f"Track your package: {tr['tracking_url']}",
                                        f"Acompanhe sua entrega: {tr['tracking_url']}"))
@@ -550,21 +550,21 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                     f"I wasn't able to locate an order for the {mp_name} in our system. "
                     "Could you please share your order number? "
                     "You'll find it in your confirmation email.",
-                    f"Não encontrei um pedido para {mp_name} no sistema. "
-                    "Poderia informar o número do pedido? "
-                    "Você encontrará no e-mail de confirmação da compra."
+                    f"NÃ£o encontrei um pedido para {mp_name} no sistema. "
+                    "Poderia informar o nÃºmero do pedido? "
+                    "VocÃª encontrarÃ¡ no e-mail de confirmaÃ§Ã£o da compra."
                 ))
             else:
                 lines.append(t(
                     f"I wasn't able to locate order{num_hint} in our system. "
                     "Could you double-check the order number and reply with it?",
-                    f"Não consegui localizar o pedido{num_hint} no sistema. "
-                    "Poderia confirmar o número do pedido e responder para que eu possa verificar?"
+                    f"NÃ£o consegui localizar o pedido{num_hint} no sistema. "
+                    "Poderia confirmar o nÃºmero do pedido e responder para que eu possa verificar?"
                 ))
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     # CATEGORY: RETURN / EXCHANGE
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     elif category == "TROCA_DEVOLUCAO":
         on = order.get("order_number", "") if order else ""
         items_str = ", ".join(i["title"] for i in order.get("items", [])) if order else ""
@@ -572,7 +572,7 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
         product_name_from_catalogue = product.get("title") if product else None
         display_items = product_name_from_catalogue or items_str
         if not order:
-            # No order found — acknowledge product if mentioned, then ask for order number
+            # No order found â acknowledge product if mentioned, then ask for order number
             if mentioned_products:
                 mp_name = mentioned_products[0].get("title", "")
                 lines.append(t(
@@ -580,23 +580,23 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                     "To verify your order and check eligibility under our 14-day return policy, "
                      "could you please provide your order number? "
                     "You'll find it in your original confirmation email.",
-                    f"Vejo que você está solicitando a devolução ou troca do {mp_name}. "
+                    f"Vejo que vocÃª estÃ¡ solicitando a devoluÃ§Ã£o ou troca do {mp_name}. "
                     "Para verificar seu pedido e checar a elegibilidade dentro do prazo de 14 dias, "
-                    "poderia informar o número do pedido? "
-                    "Você encontrará no e-mail de confirmação original."
+                    "poderia informar o nÃºmero do pedido? "
+                    "VocÃª encontrarÃ¡ no e-mail de confirmaÃ§Ã£o original."
                 ))
             else:
                 lines.append(t(
                     "I'd be happy to help with your return or exchange request. "
                     "To get started, could you please provide your order number? "
                     "You'll find it in your original confirmation email.",
-                    "Ficaria feliz em ajudar com sua solicitação de devolução ou troca. "
-                    "Para iniciarmos, poderia me informar o número do seu pedido? "
-                    "Você encontrará no e-mail de confirmação original."
+                    "Ficaria feliz em ajudar com sua solicitaÃ§Ã£o de devoluÃ§Ã£o ou troca. "
+                    "Para iniciarmos, poderia me informar o nÃºmero do seu pedido? "
+                    "VocÃª encontrarÃ¡ no e-mail de confirmaÃ§Ã£o original."
                 ))
 
         elif return_window == "expired":
-            # ── DENY: outside the 14-day window ──────────────────────────────
+            # ââ DENY: outside the 14-day window ââââââââââââââââââââââââââââââ
             days_txt = t(f"{days_elapsed} days", f"{days_elapsed} dias") if days_elapsed else ""
             window_txt = t(f"{rp['window_days']} calendar days",
                            f"{rp['window_days']} dias corridos")
@@ -610,25 +610,25 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                 f"Unfortunately, after carefully reviewing your request, I can see that your order "
                 f"was delivered {days_txt} ago. Our return policy allows returns within {window_txt} "
                 f"of confirmed delivery.",
-                f"Após analisar cuidadosamente sua solicitação, verificamos que o pedido foi entregue "
-                f"há {days_txt}. Nossa política permite devoluções dentro de {window_txt} após "
-                f"a confirmação da entrega."
+                f"ApÃ³s analisar cuidadosamente sua solicitaÃ§Ã£o, verificamos que o pedido foi entregue "
+                f"hÃ¡ {days_txt}. Nossa polÃ­tica permite devoluÃ§Ãµes dentro de {window_txt} apÃ³s "
+                f"a confirmaÃ§Ã£o da entrega."
             ))
             lines.append("")
             lines.append(t(
                 f"As the return window has passed, we are unfortunately unable to process this return. "
                 f"We apologise for any inconvenience this may cause.",
-                f"Como o prazo de devolução foi ultrapassado, infelizmente não conseguimos processar "
-                f"esta solicitação. Pedimos desculpas pelo transtorno."
+                f"Como o prazo de devoluÃ§Ã£o foi ultrapassado, infelizmente nÃ£o conseguimos processar "
+                f"esta solicitaÃ§Ã£o. Pedimos desculpas pelo transtorno."
             ))
             lines.append("")
             lines.append(t(
                 f"For full details, you can review our return policy here: {rp['url']}",
-                f"Para mais detalhes, consulte nossa política de devoluções: {rp['url']}"
+                f"Para mais detalhes, consulte nossa polÃ­tica de devoluÃ§Ãµes: {rp['url']}"
             ))
 
         elif return_window == "eligible":
-            # ── APPROVE: within window — request photos + confirm email ───────
+            # ââ APPROVE: within window â request photos + confirm email âââââââ
             lines.append(t(
                 f"I've located your order {on} and I can see it was delivered recently.",
                 f"Localizei seu pedido {on} e verifico que foi entregue recentemente."
@@ -639,8 +639,8 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
             lines.append(t(
                 "Your order is within our 14-day return window, so we're happy to assist! "
                 "To process your return, we'll need a few things from you:",
-                "Seu pedido está dentro do prazo de 14 dias para devolução, então podemos prosseguir! "
-                "Para darmos continuidade, precisaremos de algumas informações:"
+                "Seu pedido estÃ¡ dentro do prazo de 14 dias para devoluÃ§Ã£o, entÃ£o podemos prosseguir! "
+                "Para darmos continuidade, precisaremos de algumas informaÃ§Ãµes:"
             ))
             lines.append("")
             lines.append(t(
@@ -650,42 +650,42 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
             lines.append(t(
                 "2. Confirmation of the email address registered on the order "
                 f"({'your email appears to be: ' + customer_email if customer_email else 'please provide the email used at checkout'}).",
-                "2. Confirmação do endereço de e-mail cadastrado no pedido "
+                "2. ConfirmaÃ§Ã£o do endereÃ§o de e-mail cadastrado no pedido "
                 f"({'seu e-mail parece ser: ' + customer_email if customer_email else 'por favor informe o e-mail utilizado na compra'})."
             ))
             lines.append(t(
                 "3. The reason for the return (e.g. quality issue, wrong item, change of mind).",
-                "3. O motivo da devolução (ex: problema de qualidade, item errado, desistência)."
+                "3. O motivo da devoluÃ§Ã£o (ex: problema de qualidade, item errado, desistÃªncia)."
             ))
             lines.append("")
             lines.append(t(
                 f"Once we receive your photos and confirmation, we will issue a prepaid return label. "
                 f"After the item is received at our warehouse, your refund will be processed within "
                 f"{rp['refund_processing_days']} business days.",
-                f"Após recebermos as fotos e confirmações, enviaremos uma etiqueta de devolução. "
-                f"Assim que o item for recebido em nosso estoque, o reembolso será processado em até "
-                f"{rp['refund_processing_days']} dias úteis."
+                f"ApÃ³s recebermos as fotos e confirmaÃ§Ãµes, enviaremos uma etiqueta de devoluÃ§Ã£o. "
+                f"Assim que o item for recebido em nosso estoque, o reembolso serÃ¡ processado em atÃ© "
+                f"{rp['refund_processing_days']} dias Ãºteis."
             ))
             lines.append("")
             lines.append(t(
                 f"For reference, you can review our full return policy here: {rp['url']}",
-                f"Para referência, consulte nossa política de devoluções: {rp['url']}"
+                f"Para referÃªncia, consulte nossa polÃ­tica de devoluÃ§Ãµes: {rp['url']}"
             ))
 
         elif return_window == "not_delivered":
-            # ── Order exists but not yet delivered ────────────────────────────
+            # ââ Order exists but not yet delivered ââââââââââââââââââââââââââââ
             tracking = order.get("tracking", []) if order else []
             lines.append(t(
                 f"I've located your order {on}. It appears your order is still in transit and "
                 "hasn't been delivered yet.",
-                f"Localizei seu pedido {on}. Parece que o pedido ainda está em trânsito e "
-                "não foi entregue."
+                f"Localizei seu pedido {on}. Parece que o pedido ainda estÃ¡ em trÃ¢nsito e "
+                "nÃ£o foi entregue."
             ))
             if tracking and tracking[0].get("tracking_number"):
                 tr = tracking[0]
                 lines.append("")
                 lines.append(t(f"Tracking number: {tr['tracking_number']}",
-                               f"Código de rastreio: {tr['tracking_number']}"))
+                               f"CÃ³digo de rastreio: {tr['tracking_number']}"))
                 if tr.get("tracking_url"):
                     lines.append(t(f"Track your package: {tr['tracking_url']}",
                                    f"Acompanhe sua entrega: {tr['tracking_url']}"))
@@ -693,12 +693,12 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
             lines.append(t(
                 "Once the delivery is confirmed, you'll have 14 days to request a return if needed. "
                 "Please don't hesitate to reach out after it arrives.",
-                "Após a confirmação da entrega, você terá 14 dias para solicitar a devolução, se necessário. "
-                "Não hesite em nos contatar após o recebimento."
+                "ApÃ³s a confirmaÃ§Ã£o da entrega, vocÃª terÃ¡ 14 dias para solicitar a devoluÃ§Ã£o, se necessÃ¡rio. "
+                "NÃ£o hesite em nos contatar apÃ³s o recebimento."
             ))
 
         else:
-            # ── Unknown window (no delivery data) — ask for more info ─────────
+            # ââ Unknown window (no delivery data) â ask for more info âââââââââ
             lines.append(t(
                 "I'd be happy to help with your return or exchange. "
                 "To check your eligibility under our 14-day return policy, could you please:\n\n"
@@ -706,17 +706,17 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                 "2. Let us know the delivery date\n"
                 "3. Share photos of the item(s)\n\n"
                 f"You can review our full return policy here: {rp['url']}",
-                "Ficaria feliz em ajudar com sua devolução ou troca. "
+                "Ficaria feliz em ajudar com sua devoluÃ§Ã£o ou troca. "
                 "Para verificar sua elegibilidade dentro do prazo de 14 dias, poderia:\n\n"
-                "1. Confirmar o número do pedido\n"
+                "1. Confirmar o nÃºmero do pedido\n"
                 "2. Informar a data de entrega\n"
                 "3. Enviar fotos dos itens\n\n"
-                f"Consulte nossa política de devoluções: {rp['url']}"
+                f"Consulte nossa polÃ­tica de devoluÃ§Ãµes: {rp['url']}"
             ))
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     # CATEGORY: CANCELLATION
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     elif category == "CANCELAMENTO":
         if order:
             on = order.get("order_number", "")
@@ -734,32 +734,32 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                 lines.append(t(
                     "Your order has not been shipped yet, so cancellation may still be possible. "
                     "Please reply confirming you'd like to proceed with the cancellation.",
-                    "Seu pedido ainda não foi enviado, então o cancelamento pode ser possível. "
+                    "Seu pedido ainda nÃ£o foi enviado, entÃ£o o cancelamento pode ser possÃ­vel. "
                     "Responda confirmando que deseja prosseguir com o cancelamento."
                 ))
             else:
                 lines.append(t(
                     "Unfortunately, your order has already been shipped and can no longer be cancelled. "
                     "Once you receive it, you're welcome to initiate a return within 14 days of delivery.",
-                    "Infelizmente, seu pedido já foi enviado e não pode mais ser cancelado. "
-                    "Após o recebimento, você pode solicitar a devolução dentro de 14 dias da entrega."
+                    "Infelizmente, seu pedido jÃ¡ foi enviado e nÃ£o pode mais ser cancelado. "
+                    "ApÃ³s o recebimento, vocÃª pode solicitar a devoluÃ§Ã£o dentro de 14 dias da entrega."
                 ))
                 lines.append(t(
                     f"Return policy: {rp['url']}",
-                    f"Política de devoluções: {rp['url']}"
+                    f"PolÃ­tica de devoluÃ§Ãµes: {rp['url']}"
                 ))
         else:
             num_hint = f" ({extracted_num})" if extracted_num else ""
             lines.append(t(
                 f"I wasn't able to locate order{num_hint}. "
                 "Could you confirm the order number so I can check its status?",
-                f"Não localizei o pedido{num_hint}. "
-                "Poderia confirmar o número para que eu possa verificar o status?"
+                f"NÃ£o localizei o pedido{num_hint}. "
+                "Poderia confirmar o nÃºmero para que eu possa verificar o status?"
             ))
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     # CATEGORY: ORDER PROBLEM
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     elif category == "PROBLEMA_PEDIDO":
         if order:
             on = order.get("order_number", "")
@@ -780,24 +780,24 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                 "1. Clear photos of the item(s) showing the problem\n"
                 "2. A brief description of the issue\n"
                 f"3. Confirmation that the email on file is correct ({customer_email or 'please provide'})",
-                "Para resolver isso o mais rápido possível, poderia nos enviar:\n\n"
-                "1. Fotos nítidas dos itens com o problema\n"
-                "2. Uma breve descrição do problema\n"
-                f"3. Confirmação de que o e-mail cadastrado está correto ({customer_email or 'por favor informe'})"
+                "Para resolver isso o mais rÃ¡pido possÃ­vel, poderia nos enviar:\n\n"
+                "1. Fotos nÃ­tidas dos itens com o problema\n"
+                "2. Uma breve descriÃ§Ã£o do problema\n"
+                f"3. ConfirmaÃ§Ã£o de que o e-mail cadastrado estÃ¡ correto ({customer_email or 'por favor informe'})"
             ))
             lines.append("")
             if return_window == "eligible":
                 lines.append(t(
                     f"Since your order is within our {rp['window_days']}-day return window, "
                     "we can arrange a replacement or full refund once we receive your photos.",
-                    f"Como seu pedido está dentro do prazo de {rp['window_days']} dias, "
-                    "podemos providenciar a troca ou reembolso após recebermos as fotos."
+                    f"Como seu pedido estÃ¡ dentro do prazo de {rp['window_days']} dias, "
+                    "podemos providenciar a troca ou reembolso apÃ³s recebermos as fotos."
                 ))
             elif return_window == "expired":
                 lines.append(t(
                     "Although the standard return window has passed, we take product quality "
                     "very seriously. Please send the photos and we will evaluate your case individually.",
-                    "Embora o prazo padrão de devolução tenha passado, levamos a qualidade muito a sério. "
+                    "Embora o prazo padrÃ£o de devoluÃ§Ã£o tenha passado, levamos a qualidade muito a sÃ©rio. "
                     "Por favor, envie as fotos e avaliaremos seu caso individualmente."
                 ))
         else:
@@ -812,10 +812,10 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                     "2. Clear photos of the issue\n"
                     "3. A brief description of the problem",
                     f"Lamento muito pelo problema com seu {mp_name}. "
-                    "Para ajudá-lo o mais rápido possível, poderia compartilhar:\n\n"
-                    "1. Número do pedido\n"
-                    "2. Fotos nítidas do problema\n"
-                    "3. Uma breve descrição do que aconteceu"
+                    "Para ajudÃ¡-lo o mais rÃ¡pido possÃ­vel, poderia compartilhar:\n\n"
+                    "1. NÃºmero do pedido\n"
+                    "2. Fotos nÃ­tidas do problema\n"
+                    "3. Uma breve descriÃ§Ã£o do que aconteceu"
                 ))
             else:
                 lines.append(t(
@@ -825,28 +825,28 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                     "2. Photos of the issue\n"
                     "3. A description of the problem",
                     f"Lamento muito pelo problema{num_hint}. "
-                    "Para ajudá-lo, poderia compartilhar:\n\n"
-                    "1. Número do pedido\n"
+                    "Para ajudÃ¡-lo, poderia compartilhar:\n\n"
+                    "1. NÃºmero do pedido\n"
                     "2. Fotos do problema\n"
-                    "3. Uma descrição do que aconteceu"
+                    "3. Uma descriÃ§Ã£o do que aconteceu"
                 ))
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     # CATEGORY: PRODUCT QUESTION
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     elif category == "DUVIDA_PRODUTO":
         if product:
             lines.append(t(f"Here is the information about {product.get('title', '')}:\n",
-                           f"Aqui estão as informações sobre {product.get('title', '')}:\n"))
+                           f"Aqui estÃ£o as informaÃ§Ãµes sobre {product.get('title', '')}:\n"))
             price = product["variants"][0]["price"] if product.get("variants") else "N/A"
-            lines.append(t(f"Price: {price}", f"Preço: R$ {price}"))
+            lines.append(t(f"Price: {price}", f"PreÃ§o: R$ {price}"))
             avail = product.get("available")
             lines.append(t(f"Availability: {'In stock' if avail else 'Out of stock'}",
-                           f"Disponibilidade: {'Em estoque' if avail else 'Indisponível'}"))
+                           f"Disponibilidade: {'Em estoque' if avail else 'IndisponÃ­vel'}"))
             if product.get("variants") and len(product["variants"]) > 1:
                 vs = ", ".join(v["title"] for v in product["variants"] if v["title"] != "Default Title")
                 if vs:
-                    lines.append(t(f"Options: {vs}", f"Opções: {vs}"))
+                    lines.append(t(f"Options: {vs}", f"OpÃ§Ãµes: {vs}"))
             if product.get("url"):
                 lines.append(t(f"\nView on our store: {product['url']}",
                                f"\nVeja na nossa loja: {product['url']}"))
@@ -855,25 +855,25 @@ def generate_draft(ticket: dict) -> str:  # noqa: C901 – complexity OK for thi
                 f"Thank you for your interest! Could you let me know the exact product name "
                 f"or share the link? You can also browse our full collection at {cfg['store_url']}.",
                 f"Obrigado pelo interesse! Poderia me dizer o nome exato do produto "
-                f"ou compartilhar o link? Você também pode ver nossa coleção em {cfg['store_url']}."
+                f"ou compartilhar o link? VocÃª tambÃ©m pode ver nossa coleÃ§Ã£o em {cfg['store_url']}."
             ))
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     # CATEGORY: OTHER
-    # ══════════════════════════════════════════════════════════════════════════
+    # ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
     else:
         lines.append(t(
             "I've received your message and will look into it right away. "
             "I'll get back to you as soon as possible.",
             "Recebi sua mensagem e vou analisar imediatamente. "
-            "Retornarei em breve com mais informações."
+            "Retornarei em breve com mais informaÃ§Ãµes."
         ))
 
     lines.extend([f"\n{help_line}\n", closing])
     return "\n".join(lines)
 
 
-# ─── HTTP Request Handler ───────────────────────────────────────────────────
+# âââ HTTP Request Handler âââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 class SupportHandler(SimpleHTTPRequestHandler):
     """Handle API routes and serve static files."""
@@ -944,11 +944,11 @@ class SupportHandler(SimpleHTTPRequestHandler):
                         from google.oauth2.credentials import Credentials as _Creds
                         _creds = _Creds.from_authorized_user_file(_gc.TOKEN_FILE, _gc.SCOPES)
                         gmail_ok = bool(_creds and (_creds.valid or _creds.refresh_token))
-                        gmail_msg = "token valid" if _creds.valid else "token expired — will auto-refresh"
+                        gmail_msg = "token valid" if _creds.valid else "token expired â will auto-refresh"
                     elif os.path.exists(_gc.CREDENTIALS_FILE):
-                        gmail_msg = "credentials.json found — run sync to complete OAuth"
+                        gmail_msg = "credentials.json found â run sync to complete OAuth"
                     else:
-                        gmail_msg = "Missing gmail_credentials.json — see setup instructions"
+                        gmail_msg = "Missing gmail_credentials.json â see setup instructions"
                 except Exception as e:
                     gmail_msg = str(e)
 
@@ -1055,11 +1055,11 @@ class SupportHandler(SimpleHTTPRequestHandler):
             (os.path.exists(gmail_client.TOKEN_FILE) or os.path.exists(gmail_client.CREDENTIALS_FILE))
         )
         if not gmail_ready:
-            self._json_response({"processed": 0, "warning": "Gmail not configured — no credentials found."})
+            self._json_response({"processed": 0, "warning": "Gmail not configured â no credentials found."})
             return
 
         try:
-            emails = gmail_client.fetch_unread_emails(max_results=10)
+            emails = gmail_client.fetch_unread_emails(max_results=3)
         except Exception as e:
             self._json_response({"processed": 0, "warning": f"Gmail error: {str(e)}"})
             return
@@ -1168,7 +1168,7 @@ class SupportHandler(SimpleHTTPRequestHandler):
             if not subject.lower().startswith("re:"):
                 subject = f"Re: {subject}"
 
-            # ── 1. Try SMTP (App Password) — the primary send method ──────────
+            # ââ 1. Try SMTP (App Password) â the primary send method ââââââââââ
             if smtp_ready():
                 result = send_email_smtp(
                     to=ticket["customer_email"],
@@ -1182,8 +1182,8 @@ class SupportHandler(SimpleHTTPRequestHandler):
                         "status": "sent",
                         "sent_at": now_sent,
                     })
-                    database.add_log(ticket_id, "sent", f"SMTP → {ticket['customer_email']}")
-                    # ── Create outbox copy so it appears in the Sent tab ──
+                    database.add_log(ticket_id, "sent", f"SMTP â {ticket['customer_email']}")
+                    # ââ Create outbox copy so it appears in the Sent tab ââ
                     sent_copy_id = f"sent-{ticket.get('gmail_message_id', ticket_id)}"
                     if not database.ticket_exists(sent_copy_id):
                         database.create_ticket({
@@ -1211,9 +1211,9 @@ class SupportHandler(SimpleHTTPRequestHandler):
                     self._json_response({"error": result["error"]})
                     return
 
-            # ── 2. SMTP not configured — return draft for manual copy/paste ───
+            # ââ 2. SMTP not configured â return draft for manual copy/paste âââ
             database.update_ticket(ticket_id, {"status": "approved"})
-            database.add_log(ticket_id, "manual_send", "SMTP not configured — send manually")
+            database.add_log(ticket_id, "manual_send", "SMTP not configured â send manually")
             self._json_response({
                 "success": True,
                 "manual": True,
@@ -1224,7 +1224,7 @@ class SupportHandler(SimpleHTTPRequestHandler):
             })
 
         except Exception as exc:
-            # Safety net — prevent any internal error (including stale gmail_client
+            # Safety net â prevent any internal error (including stale gmail_client
             # calls) from leaking confusing credential messages to the UI.
             err_str = str(exc)
             try:
@@ -1235,7 +1235,7 @@ class SupportHandler(SimpleHTTPRequestHandler):
             if smtp_ready():
                 self._json_response({"error": f"Erro ao enviar: {err_str}"})
             else:
-                # SMTP not yet configured — show the manual copy dialog instead
+                # SMTP not yet configured â show the manual copy dialog instead
                 try:
                     t2 = database.get_ticket(ticket_id) or {}
                     draft = t2.get("final_response") or t2.get("draft_response") or ""
@@ -1275,17 +1275,17 @@ class SupportHandler(SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         if "/api/" in str(args[0]) if args else False:
-            print(f"  → {args[0]}")
+            print(f"  â {args[0]}")
 
 
-# ─── Threaded HTTP Server ────────────────────────────────────────────────────
+# âââ Threaded HTTP Server ââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-    """Multi-threaded HTTP server — prevents Gmail OAuth from blocking requests."""
+    """Multi-threaded HTTP server â prevents Gmail OAuth from blocking requests."""
     daemon_threads = True
 
 
-# ─── Main ────────────────────────────────────────────────────────────────────
+# âââ Main ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 def main():
     database.init_db()
@@ -1294,27 +1294,27 @@ def main():
     port = int(os.getenv("APP_PORT", 8000))
 
     # Check Gmail token status
-    gmail_status = "✗ not configured"
+    gmail_status = "â not configured"
     if GMAIL_AVAILABLE:
         try:
             import gmail_client as _gc
             if os.path.exists(_gc.TOKEN_FILE):
-                gmail_status = "✓ token found"
+                gmail_status = "â token found"
             elif os.path.exists(_gc.CREDENTIALS_FILE):
-                gmail_status = "⚠  credentials.json found — OAuth needed on first sync"
+                gmail_status = "â   credentials.json found â OAuth needed on first sync"
             else:
-                gmail_status = "✗ gmail_credentials.json missing (see README)"
+                gmail_status = "â gmail_credentials.json missing (see README)"
         except Exception:
             pass
 
     print(f"""
-  ✦  Monteiro Jewels — Support Agent Dashboard
-  ─────────────────────────────────────────────
+  â¦  Monteiro Jewels â Support Agent Dashboard
+  âââââââââââââââââââââââââââââââââââââââââââââ
   Dashboard:  http://localhost:{port}
   Shopify:    {os.getenv('SHOPIFY_STORE', 'not configured')}
   Gmail:      {gmail_status}
   Database:   {database.DB_PATH}
-  ─────────────────────────────────────────────
+  âââââââââââââââââââââââââââââââââââââââââââââ
   Press Ctrl+C to stop
 """)
 
