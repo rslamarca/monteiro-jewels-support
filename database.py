@@ -1,7 +1,7 @@
 """
-Database layer â supports both:
-  â¢ Supabase / PostgreSQL  (when DATABASE_URL env var is set)
-  â¢ Local SQLite           (fallback for Mac dev)
+Database layer Ã¢ÂÂ supports both:
+  Ã¢ÂÂ¢ Supabase / PostgreSQL  (when DATABASE_URL env var is set)
+  Ã¢ÂÂ¢ Local SQLite           (fallback for Mac dev)
 """
 import os
 import json
@@ -53,7 +53,7 @@ def _row_to_dict(row):
 
 def init_db():
     if _USE_PG:
-        print("  â Database: Supabase PostgreSQL")
+        print("  Ã¢ÂÂ Database: Supabase PostgreSQL")
         return
     conn = get_connection()
     conn.executescript("""
@@ -63,7 +63,7 @@ def init_db():
     """)
     conn.commit()
     conn.close()
-    print(f"  â Database: {DB_PATH}")
+    print(f"  Ã¢ÂÂ Database: {DB_PATH}")
 
 
 def _shopify_value(data):
@@ -115,7 +115,7 @@ def update_ticket(ticket_id, updates):
     now = _now()
     sets = [f"updated_at = {PH}"]; params = [now]
     for field in ["draft_response", "final_response", "status", "category", "processed_at", "sent_at", "shopify_order_number"]:
-        if field in updates: sets.append(f"{rfield} = {PH}"); params.append(updates[field])
+        if field in updates: sets.append(f"{field} = {PH}"); params.append(updates[field])
     if "status" in updates:
         if updates["status"] == "approved": sets.append(f"approved_at = {PH}"); params.append(now)
         elif updates["status"] == "sent": sets.append(f"sent_at = {PH}"); params.append(now)
