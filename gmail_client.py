@@ -28,6 +28,20 @@ def get_gmail_service():
     """Build and return an authenticated Gmail service."""
     creds = None
 
+    # Option 0: pre-authorized token via GMAIL_TOKEN_JSON env var (for server deployments like Render).
+    # Set GMAIL_TOKEN_JSON to the contents of your local gmail_token.json (plain JSON or base64-encoded).
+    token_json_env = os.getenv("GMAIL_TOKEN_JSON", "")
+    if token_json_env and not os.path.exists(TOKEN_FILE):
+        try:
+            try:
+                token_data = base64.b64decode(token_json_env).decode("utf-8")
+            except Exception:
+                token_data = token_json_env
+            with open(TOKEN_FILE, "w") as f:
+                f.write(token_data)
+        except Exception:
+            pass
+
     # Load existing token if available
     if os.path.exists(TOKEN_FILE):
         try:
@@ -38,8 +52,12 @@ def get_gmail_service():
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
+            # Persist refreshed token
+            with open(TOKEN_FILE, "w") as token:
+                token.write(creds.to_json())
+            return build("gmail", "v1", credentials=creds)
         else:
-            # Option 1: credentials JSON file (preferred)
+            # Option 1: credentials JSON file (preferred for local use)
             if os.path.exists(CREDENTIALS_FILE):
                 flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
 
@@ -59,9 +77,10 @@ def get_gmail_service():
 
             else:
                 raise FileNotFoundError(
-                    "Gmail credentials not found. Either:\n"
-                    "  1) Download 'gmail_credentials.json' from Google Cloud Console and place it in the app folder, OR\n"
-                    "  2) Set GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET in the .env file.\n"
+                    "Gmail credentials not found. Options:\n"
+                    "  1) Set GMAIL_TOKEN_JSON env var to the contents of your local gmail_token.json\n"
+                    "  2) Download 'gmail_credentials.json' from Google Cloud Console and place it in the app folder\n"
+                    "  3) Set GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET in the .env file.\n"
                     "See README.md for step-by-step instructions."
                 )
 
