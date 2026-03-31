@@ -13,7 +13,8 @@ from typing import Optional
 from email.header import decode_header as _decode_header
 
 # ─── Constants (kept for backward compat with main.py checks) ─────────────────
-TOKEN_FILE       = "gmail_token.json"
+# TOKEN_FILE lives in /tmp so it is always writable on cloud hosts (Render, etc.)
+TOKEN_FILE       = "/tmp/gmail_token.json"
 CREDENTIALS_FILE = "gmail_credentials.json"
 SCOPES           = []   # Not used in IMAP mode; kept so main.py imports cleanly
 
@@ -29,20 +30,14 @@ def _imap_ready() -> bool:
 
 # ─── Create a marker file so main.py's os.path.exists(TOKEN_FILE) passes ──────
 def _ensure_marker():
-    global TOKEN_FILE
     if not _imap_ready():
         return
-    for candidate in [TOKEN_FILE, "/tmp/gmail_token.json"]:
-        if os.path.exists(candidate):
-            TOKEN_FILE = candidate
-            return
+    if not os.path.exists(TOKEN_FILE):
         try:
-            with open(candidate, "w") as f:
+            with open(TOKEN_FILE, "w") as f:
                 json.dump({"type": "imap", "user": _GMAIL_USER}, f)
-            TOKEN_FILE = candidate
-            return
         except Exception:
-            continue
+            pass
 
 _ensure_marker()
 
